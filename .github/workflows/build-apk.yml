@@ -1,0 +1,216 @@
+name: Build HakanNovin APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/build-apk.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Create Android project
+        run: |
+          mkdir -p hakan/app/src/main/java/com/hakannovin/app
+          mkdir -p hakan/app/src/main/res/values
+
+          cat > hakan/settings.gradle <<'EOF'
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+
+          rootProject.name = "HakanNovin"
+          include(":app")
+          EOF
+
+          cat > hakan/build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application' version '8.5.2' apply false
+          }
+          EOF
+
+          cat > hakan/gradle.properties <<'EOF'
+          org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+          android.useAndroidX=true
+          EOF
+
+          cat > hakan/app/build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application'
+          }
+
+          android {
+              namespace 'com.hakannovin.app'
+              compileSdk 35
+
+              defaultConfig {
+                  applicationId 'com.hakannovin.app'
+                  minSdk 23
+                  targetSdk 35
+                  versionCode 1
+                  versionName '1.0'
+              }
+          }
+          EOF
+
+          cat > hakan/app/src/main/AndroidManifest.xml <<'EOF'
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <application
+                  android:theme="@style/AppTheme"
+                  android:label="هاکان نوین"
+                  android:allowBackup="true"
+                  android:supportsRtl="true">
+
+                  <activity
+                      android:name=".MainActivity"
+                      android:screenOrientation="portrait"
+                      android:exported="true">
+
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN"/>
+                          <category android:name="android.intent.category.LAUNCHER"/>
+                      </intent-filter>
+
+                  </activity>
+              </application>
+          </manifest>
+          EOF
+
+          cat > hakan/app/src/main/res/values/styles.xml <<'EOF'
+          <resources>
+              <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+                  <item name="android:fontFamily">sans</item>
+                  <item name="android:layoutDirection">rtl</item>
+                  <item name="android:textDirection">rtl</item>
+                  <item name="android:windowLightStatusBar">true</item>
+                  <item name="android:statusBarColor">#FFFFFF</item>
+                  <item name="android:navigationBarColor">#FFFFFF</item>
+              </style>
+          </resources>
+          EOF
+
+          cat > hakan/app/src/main/java/com/hakannovin/app/MainActivity.java <<'EOF'
+          package com.hakannovin.app;
+
+          import android.app.Activity;
+          import android.os.Bundle;
+          import android.graphics.Color;
+          import android.graphics.Typeface;
+          import android.view.Gravity;
+          import android.view.View;
+          import android.widget.*;
+
+          public class MainActivity extends Activity {
+
+              LinearLayout root;
+
+              int dp(float v) {
+                  return (int)(v * getResources().getDisplayMetrics().density + .5f);
+              }
+
+              TextView text(String s, float size) {
+                  TextView t = new TextView(this);
+                  t.setText(s);
+                  t.setTextSize(size);
+                  t.setTextColor(Color.rgb(30,30,30));
+                  t.setGravity(Gravity.RIGHT|Gravity.CENTER_VERTICAL);
+                  t.setPadding(dp(12),dp(8),dp(12),dp(8));
+                  return t;
+              }
+
+              Button button(String s) {
+                  Button b = new Button(this);
+                  b.setText(s);
+                  b.setTextSize(15);
+                  b.setAllCaps(false);
+                  return b;
+              }
+
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+
+                  root = new LinearLayout(this);
+                  root.setOrientation(LinearLayout.VERTICAL);
+                  root.setPadding(dp(16),dp(20),dp(16),dp(16));
+                  root.setBackgroundColor(Color.rgb(248,249,251));
+
+                  TextView title = text("هاکان نوین", 28);
+                  title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+                  title.setGravity(Gravity.RIGHT);
+                  root.addView(title,new LinearLayout.LayoutParams(-1,dp(55)));
+
+                  TextView sub = text("مدیریت مشتریان و خدمات تصفیه آب",15);
+                  sub.setTextColor(Color.DKGRAY);
+                  root.addView(sub,new LinearLayout.LayoutParams(-1,dp(40)));
+
+                  LinearLayout stats = new LinearLayout(this);
+                  stats.setOrientation(LinearLayout.HORIZONTAL);
+
+                  TextView c1 = text("مشتریان\n0",18);
+                  TextView c2 = text("موعد سرویس\n0",18);
+                  TextView c3 = text("بدهکاری\n0",18);
+
+                  c1.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
+                  c2.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
+                  c3.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
+
+                  stats.addView(c1,new LinearLayout.LayoutParams(0,dp(90),1));
+                  stats.addView(c2,new LinearLayout.LayoutParams(0,dp(90),1));
+                  stats.addView(c3,new LinearLayout.LayoutParams(0,dp(90),1));
+
+                  root.addView(stats);
+
+                  Button customers = button("👥  مشتریان");
+                  Button add = button("➕  مشتری جدید");
+                  Button service = button("🔧  ثبت سرویس");
+                  Button search = button("🔎  جستجوی مشتری");
+                  Button backup = button("💾  پشتیبان‌گیری و بازیابی");
+
+                  root.addView(customers);
+                  root.addView(add);
+                  root.addView(service);
+                  root.addView(search);
+                  root.addView(backup);
+
+                  TextView info = text(
+                      "چرخه سرویس دوره‌ای: هر ۶ ماه\n" +
+                      "یادآوری سرویس: ۳ روز قبل از موعد\n" +
+                      "هاکان نوین | نسخه ۱.۰",14);
+
+                  info.setPadding(dp(8),dp(25),dp(8),dp(8));
+                  root.addView(info);
+
+                  setContentView(root);
+              }
+          }
+          EOF
+
+          cd hakan
+
+          wget -q https://services.gradle.org/distributions/gradle-8.7-bin.zip
+          unzip -q gradle-8.7-bin.zip
+          export PATH="$PWD/gradle-8.7/bin:$PATH"
+
+          gradle wrapper --gradle-version 8.7
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: HakanNovin-APK
+          path: hakan/app/build/outputs/apk/debug/app-debug.apk
