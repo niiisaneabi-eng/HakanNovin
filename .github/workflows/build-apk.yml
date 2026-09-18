@@ -61,14 +61,15 @@ jobs:
                   applicationId 'com.hakannovin.app'
                   minSdk 23
                   targetSdk 35
-                  versionCode 1
-                  versionName '1.0'
+                  versionCode 2
+                  versionName '2.0'
               }
           }
           EOF
 
           cat > hakan/app/src/main/AndroidManifest.xml <<'EOF'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
               <application
                   android:theme="@style/AppTheme"
                   android:label="هاکان نوین"
@@ -86,20 +87,27 @@ jobs:
                       </intent-filter>
 
                   </activity>
+
               </application>
+
           </manifest>
           EOF
 
           cat > hakan/app/src/main/res/values/styles.xml <<'EOF'
           <resources>
-              <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+
+              <style name="AppTheme"
+                  parent="android:style/Theme.Material.Light.NoActionBar">
+
                   <item name="android:fontFamily">sans</item>
                   <item name="android:layoutDirection">rtl</item>
                   <item name="android:textDirection">rtl</item>
                   <item name="android:windowLightStatusBar">true</item>
                   <item name="android:statusBarColor">#FFFFFF</item>
                   <item name="android:navigationBarColor">#FFFFFF</item>
+
               </style>
+
           </resources>
           EOF
 
@@ -108,15 +116,24 @@ jobs:
 
           import android.app.Activity;
           import android.os.Bundle;
+          import android.content.Intent;
+          import android.net.Uri;
+          import android.provider.Settings;
           import android.graphics.Color;
           import android.graphics.Typeface;
           import android.view.Gravity;
           import android.view.View;
           import android.widget.*;
+          import java.io.*;
+          import java.util.*;
+          import java.util.zip.*;
+          import org.xmlpull.v1.XmlPullParser;
+          import android.util.Xml;
 
           public class MainActivity extends Activity {
 
               LinearLayout root;
+              ArrayList<Customer> customers = new ArrayList<>();
 
               int dp(float v) {
                   return (int)(v * getResources().getDisplayMetrics().density + .5f);
@@ -127,7 +144,7 @@ jobs:
                   t.setText(s);
                   t.setTextSize(size);
                   t.setTextColor(Color.rgb(30,30,30));
-                  t.setGravity(Gravity.RIGHT|Gravity.CENTER_VERTICAL);
+                  t.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
                   t.setPadding(dp(12),dp(8),dp(12),dp(8));
                   return t;
               }
@@ -143,74 +160,433 @@ jobs:
               @Override
               protected void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
+                  showHome();
+              }
+
+              void showHome() {
 
                   root = new LinearLayout(this);
                   root.setOrientation(LinearLayout.VERTICAL);
                   root.setPadding(dp(16),dp(20),dp(16),dp(16));
                   root.setBackgroundColor(Color.rgb(248,249,251));
 
-                  TextView title = text("هاکان نوین", 28);
-                  title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-                  title.setGravity(Gravity.RIGHT);
+                  TextView title = text("هاکان نوین",28);
+                  title.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
                   root.addView(title,new LinearLayout.LayoutParams(-1,dp(55)));
 
-                  TextView sub = text("مدیریت مشتریان و خدمات تصفیه آب",15);
+                  TextView sub = text(
+                          "مدیریت مشتریان و خدمات تصفیه آب",
+                          15);
                   sub.setTextColor(Color.DKGRAY);
                   root.addView(sub,new LinearLayout.LayoutParams(-1,dp(40)));
 
-                  LinearLayout stats = new LinearLayout(this);
-                  stats.setOrientation(LinearLayout.HORIZONTAL);
+                  TextView count = text(
+                          "تعداد مشتریان: " + customers.size(),
+                          18);
+                  count.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
+                  root.addView(count,new LinearLayout.LayoutParams(-1,dp(60)));
 
-                  TextView c1 = text("مشتریان\n0",18);
-                  TextView c2 = text("موعد سرویس\n0",18);
-                  TextView c3 = text("بدهکاری\n0",18);
+                  Button importExcel = button("📊  ورود مشتریان از Excel");
 
-                  c1.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
-                  c2.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
-                  c3.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
+                  importExcel.setOnClickListener(v -> chooseExcel());
 
-                  stats.addView(c1,new LinearLayout.LayoutParams(0,dp(90),1));
-                  stats.addView(c2,new LinearLayout.LayoutParams(0,dp(90),1));
-                  stats.addView(c3,new LinearLayout.LayoutParams(0,dp(90),1));
+                  root.addView(importExcel);
 
-                  root.addView(stats);
+                  Button list = button("👥  لیست مشتریان");
 
-                  Button customers = button("👥  مشتریان");
+                  list.setOnClickListener(v -> showCustomers());
+
+                  root.addView(list);
+
                   Button add = button("➕  مشتری جدید");
-                  Button service = button("🔧  ثبت سرویس");
-                  Button search = button("🔎  جستجوی مشتری");
-                  Button backup = button("💾  پشتیبان‌گیری و بازیابی");
 
-                  root.addView(customers);
+                  add.setOnClickListener(v -> addCustomer());
+
                   root.addView(add);
+
+                  Button service = button("🔧  ثبت سرویس");
+
+                  service.setOnClickListener(v ->
+                          Toast.makeText(
+                                  this,
+                                  "بخش ثبت سرویس در نسخه بعدی فعال می‌شود",
+                                  Toast.LENGTH_SHORT).show());
+
                   root.addView(service);
+
+                  Button search = button("🔎  جستجوی مشتری");
+
+                  search.setOnClickListener(v -> showCustomers());
+
                   root.addView(search);
-                  root.addView(backup);
 
                   TextView info = text(
-                      "چرخه سرویس دوره‌ای: هر ۶ ماه\n" +
-                      "یادآوری سرویس: ۳ روز قبل از موعد\n" +
-                      "هاکان نوین | نسخه ۱.۰",14);
+                          "چرخه سرویس دوره‌ای: هر ۶ ماه\n" +
+                          "هاکان نوین - نسخه 2.0",
+                          14);
 
                   info.setPadding(dp(8),dp(25),dp(8),dp(8));
+
                   root.addView(info);
 
                   setContentView(root);
               }
-          }
-          EOF
 
-          cd hakan
+              void chooseExcel() {
 
-          wget -q https://services.gradle.org/distributions/gradle-8.7-bin.zip
-          unzip -q gradle-8.7-bin.zip
-          export PATH="$PWD/gradle-8.7/bin:$PATH"
+                  Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                  intent.addCategory(Intent.CATEGORY_OPENABLE);
+                  intent.setType(
+                          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
-          gradle wrapper --gradle-version 8.7
-          ./gradlew assembleDebug
+                  startActivityForResult(intent,100);
+              }
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: HakanNovin-APK
-          path: hakan/app/build/outputs/apk/debug/app-debug.apk
+              @Override
+              protected void onActivityResult(
+                      int requestCode,
+                      int resultCode,
+                      Intent data) {
+
+                  super.onActivityResult(
+                          requestCode,resultCode,data);
+
+                  if(requestCode == 100 &&
+                          resultCode == RESULT_OK &&
+                          data != null) {
+
+                      Uri uri = data.getData();
+
+                      try {
+
+                          customers.clear();
+
+                          importXlsx(uri);
+
+                          Toast.makeText(
+                                  this,
+                                  customers.size() +
+                                          " مشتری وارد شد",
+                                  Toast.LENGTH_LONG).show();
+
+                          showHome();
+
+                      } catch(Exception e) {
+
+                          Toast.makeText(
+                                  this,
+                                  "خطا در خواندن Excel: " +
+                                          e.getMessage(),
+                                  Toast.LENGTH_LONG).show();
+                      }
+                  }
+              }
+
+              void importXlsx(Uri uri) throws Exception {
+
+                  InputStream input =
+                          getContentResolver().openInputStream(uri);
+
+                  ZipInputStream zip =
+                          new ZipInputStream(
+                                  new BufferedInputStream(input));
+
+                  HashMap<String,String> files =
+                          new HashMap<>();
+
+                  ZipEntry entry;
+
+                  while((entry = zip.getNextEntry()) != null) {
+
+                      ByteArrayOutputStream out =
+                              new ByteArrayOutputStream();
+
+                      byte[] buffer = new byte[8192];
+                      int len;
+
+                      while((len = zip.read(buffer)) != -1)
+                          out.write(buffer,0,len);
+
+                      files.put(
+                              entry.getName(),
+                              out.toString("UTF-8"));
+                  }
+
+                  zip.close();
+
+                  ArrayList<String> sharedStrings =
+                          parseSharedStrings(
+                                  files.get("xl/sharedStrings.xml"));
+
+                  String sheet =
+                          files.get("xl/worksheets/sheet1.xml");
+
+                  if(sheet == null)
+                      throw new Exception("Sheet اول پیدا نشد");
+
+                  parseSheet(sheet,sharedStrings);
+              }
+
+              ArrayList<String> parseSharedStrings(
+                      String xml) throws Exception {
+
+                  ArrayList<String> result =
+                          new ArrayList<>();
+
+                  if(xml == null)
+                      return result;
+
+                  XmlPullParser parser = Xml.newPullParser();
+                  parser.setInput(
+                          new StringReader(xml));
+
+                  StringBuilder current = null;
+
+                  int event;
+
+                  while((event = parser.next())
+                          != XmlPullParser.END_DOCUMENT) {
+
+                      if(event == XmlPullParser.START_TAG &&
+                              parser.getName().equals("si")) {
+
+                          current = new StringBuilder();
+                      }
+
+                      if(event == XmlPullParser.TEXT &&
+                              current != null) {
+
+                          current.append(parser.getText());
+                      }
+
+                      if(event == XmlPullParser.END_TAG &&
+                              parser.getName().equals("si") &&
+                              current != null) {
+
+                          result.add(current.toString());
+                          current = null;
+                      }
+                  }
+
+                  return result;
+              }
+
+              void parseSheet(
+                      String xml,
+                      ArrayList<String> shared)
+                      throws Exception {
+
+                  XmlPullParser parser = Xml.newPullParser();
+                  parser.setInput(
+                          new StringReader(xml));
+
+                  ArrayList<String> row =
+                          new ArrayList<>();
+
+                  boolean inCell = false;
+                  boolean inValue = false;
+                  String type = "";
+                  String value = "";
+
+                  int event;
+
+                  while((event = parser.next())
+                          != XmlPullParser.END_DOCUMENT) {
+
+                      if(event == XmlPullParser.START_TAG) {
+
+                          String name = parser.getName();
+
+                          if(name.equals("c")) {
+
+                              inCell = true;
+                              type = parser.getAttributeValue(
+                                      null,"t");
+                              value = "";
+                          }
+
+                          if(name.equals("v") && inCell) {
+                              inValue = true;
+                          }
+                      }
+
+                      else if(event == XmlPullParser.TEXT &&
+                              inValue) {
+
+                          value += parser.getText();
+                      }
+
+                      else if(event == XmlPullParser.END_TAG) {
+
+                          String name = parser.getName();
+
+                          if(name.equals("v")) {
+
+                              inValue = false;
+                          }
+
+                          if(name.equals("c")) {
+
+                              String finalValue = value;
+
+                              if("s".equals(type)) {
+
+                                  try {
+
+                                      int index =
+                                              Integer.parseInt(value);
+
+                                      if(index >= 0 &&
+                                              index < shared.size())
+                                          finalValue =
+                                                  shared.get(index);
+
+                                  } catch(Exception ignored) {}
+                              }
+
+                              row.add(finalValue);
+                              inCell = false;
+                          }
+
+                          if(name.equals("row")) {
+
+                              if(row.size() > 0)
+                                  addRow(row);
+
+                              row = new ArrayList<>();
+                          }
+                      }
+                  }
+              }
+
+              void addRow(ArrayList<String> row) {
+
+                  if(row.size() == 0)
+                      return;
+
+                  String first = row.get(0);
+
+                  if(first.contains("نام") ||
+                          first.contains("مشتری"))
+                      return;
+
+                  Customer c = new Customer();
+
+                  c.name = get(row,0);
+                  c.installDate = get(row,1);
+                  c.address = get(row,2);
+                  c.phone = get(row,3);
+                  c.filterDate = get(row,4);
+                  c.filter56 = get(row,5);
+                  c.nextDate = get(row,6);
+                  c.device = get(row,7);
+                  c.membrane = get(row,8);
+                  c.notes = get(row,9);
+                  c.debt = get(row,10);
+
+                  if(c.name.length() > 0 ||
+                          c.phone.length() > 0) {
+
+                      customers.add(c);
+                  }
+              }
+
+              String get(
+                      ArrayList<String> row,
+                      int index) {
+
+                  if(index >= row.size())
+                      return "";
+
+                  return row.get(index).trim();
+              }
+
+              void showCustomers() {
+
+                  LinearLayout box =
+                          new LinearLayout(this);
+
+                  box.setOrientation(
+                          LinearLayout.VERTICAL);
+
+                  box.setPadding(
+                          dp(12),dp(12),
+                          dp(12),dp(12));
+
+                  TextView title =
+                          text(
+                                  "👥 مشتریان (" +
+                                  customers.size() +
+                                  ")",
+                                  22);
+
+                  title.setTypeface(
+                          Typeface.DEFAULT,
+                          Typeface.BOLD);
+
+                  box.addView(title);
+
+                  EditText search =
+                          new EditText(this);
+
+                  search.setHint(
+                          "جستجوی نام یا شماره تلفن");
+
+                  search.setSingleLine(true);
+
+                  box.addView(search);
+
+                  ScrollView scroll =
+                          new ScrollView(this);
+
+                  LinearLayout list =
+                          new LinearLayout(this);
+
+                  list.setOrientation(
+                          LinearLayout.VERTICAL);
+
+                  scroll.addView(list);
+
+                  box.addView(
+                          scroll,
+                          new LinearLayout.LayoutParams(
+                                  -1,0,1));
+
+                  Runnable refresh = () -> {
+
+                      list.removeAllViews();
+
+                      String q =
+                              search.getText()
+                                      .toString()
+                                      .trim();
+
+                      for(Customer c : customers) {
+
+                          if(q.length() > 0 &&
+                                  !c.name.contains(q) &&
+                                  !c.phone.contains(q))
+                              continue;
+
+                          Button b =
+                                  button(
+                                          c.name +
+                                          "\n" +
+                                          c.phone);
+
+                          b.setOnClickListener(
+                                  v -> showCustomer(c));
+
+                          list.addView(b);
+                      }
+                  };
+
+                  search.addTextChangedListener(
+                          new android.text.TextWatcher() {
+
+                      public void beforeTextChanged(
+                              CharSequence s,
+                              int st,int c,int a) {}
+
+                      public void onTextChanged(
+                             
