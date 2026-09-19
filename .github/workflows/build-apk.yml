@@ -15,12 +15,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Java
+      - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
+      # ---------------------------------------------------------
+      # Create Android project
+      # ---------------------------------------------------------
       - name: Create Android project
         shell: bash
         run: |
@@ -30,109 +33,109 @@ jobs:
           mkdir -p app/src/main/res/values
 
           cat > settings.gradle <<'EOF'
-pluginManagement {
-    repositories {
-        google()
-        mavenCentral()
-        gradlePluginPortal()
-    }
-}
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
 
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
 
-rootProject.name = "HakanNovin"
-include(":app")
-EOF
+          rootProject.name = "HakanNovin"
+          include(":app")
+          EOF
 
           cat > build.gradle <<'EOF'
-plugins {
-    id 'com.android.application' version '8.5.2' apply false
-}
-EOF
+          plugins {
+              id 'com.android.application' version '8.5.2' apply false
+          }
+          EOF
 
           cat > gradle.properties <<'EOF'
-org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
-android.useAndroidX=true
-android.nonTransitiveRClass=true
-EOF
+          org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+          android.useAndroidX=true
+          android.nonTransitiveRClass=true
+          EOF
 
           cat > app/build.gradle <<'EOF'
-plugins {
-    id 'com.android.application'
-}
+          plugins {
+              id 'com.android.application'
+          }
 
-android {
-    namespace 'com.hakannovin.app'
-    compileSdk 35
+          android {
+              namespace 'com.hakannovin.app'
+              compileSdk 35
 
-    defaultConfig {
-        applicationId "com.hakannovin.app"
-        minSdk 23
-        targetSdk 35
-        versionCode 32
-        versionName "3.2"
-    }
-}
-EOF
+              defaultConfig {
+                  applicationId "com.hakannovin.app"
+                  minSdk 23
+                  targetSdk 35
+                  versionCode 32
+                  versionName "3.2"
+              }
+          }
+          EOF
 
           cat > app/src/main/res/values/strings.xml <<'EOF'
-<resources>
-    <string name="app_name">هاکان نوین</string>
-</resources>
-EOF
+          <resources>
+              <string name="app_name">هاکان نوین</string>
+          </resources>
+          EOF
 
           cat > app/src/main/res/values/styles.xml <<'EOF'
-<resources>
+          <resources>
 
-    <style name="AppTheme"
-        parent="android:style/Theme.Material.Light.NoActionBar">
+              <style name="AppTheme"
+                  parent="android:style/Theme.Material.Light.NoActionBar">
 
-        <item name="android:fontFamily">sans</item>
-        <item name="android:colorAccent">#087F8C</item>
-        <item name="android:statusBarColor">#066C76</item>
-        <item name="android:navigationBarColor">#FFFFFF</item>
-        <item name="android:windowLightStatusBar">false</item>
+                  <item name="android:fontFamily">sans</item>
+                  <item name="android:windowLightStatusBar">false</item>
+                  <item name="android:statusBarColor">#087F8C</item>
+                  <item name="android:navigationBarColor">#FFFFFF</item>
+                  <item name="android:colorAccent">#087F8C</item>
 
-    </style>
+              </style>
 
-</resources>
-EOF
+          </resources>
+          EOF
 
           cat > app/src/main/AndroidManifest.xml <<'EOF'
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <application
-        android:allowBackup="true"
-        android:label="@string/app_name"
-        android:theme="@style/AppTheme"
-        android:usesCleartextTraffic="true">
+              <application
+                  android:allowBackup="true"
+                  android:label="@string/app_name"
+                  android:theme="@style/AppTheme"
+                  android:usesCleartextTraffic="true">
 
-        <activity
-            android:name=".MainActivity"
-            android:screenOrientation="portrait"
-            android:exported="true">
+                  <activity
+                      android:name=".MainActivity"
+                      android:screenOrientation="portrait"
+                      android:exported="true">
 
-            <intent-filter>
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
 
-                <action android:name="android.intent.action.MAIN" />
+                  </activity>
 
-                <category android:name="android.intent.category.LAUNCHER" />
+              </application>
 
-            </intent-filter>
+          </manifest>
+          EOF
 
-        </activity>
-
-    </application>
-
-</manifest>
-EOF
-
+      # ---------------------------------------------------------
+      # Download SheetJS
+      # ---------------------------------------------------------
       - name: Download SheetJS
         shell: bash
         run: |
@@ -141,2458 +144,2433 @@ EOF
             https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js \
             -o app/src/main/assets/xlsx.full.min.js
 
+      # ---------------------------------------------------------
+      # Android MainActivity
+      # IMPORTANT:
+      # V3.2 adds WebChromeClient + onShowFileChooser
+      # so the Android file picker actually opens.
+      # ---------------------------------------------------------
       - name: Create MainActivity
         shell: bash
         run: |
 
           cat > app/src/main/java/com/hakannovin/app/MainActivity.java <<'EOF'
-package com.hakannovin.app;
+          package com.hakannovin.app;
 
-import android.app.Activity;
-import android.os.Bundle;
-import android.webkit.WebChromeClient;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.webkit.ValueCallback;
-import android.content.Intent;
-import android.net.Uri;
+          import android.app.Activity;
+          import android.content.Intent;
+          import android.net.Uri;
+          import android.os.Bundle;
+          import android.webkit.ValueCallback;
+          import android.webkit.WebChromeClient;
+          import android.webkit.WebResourceRequest;
+          import android.webkit.WebSettings;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
 
-public class MainActivity extends Activity {
+          public class MainActivity extends Activity {
 
-    private WebView webView;
+              private static final int FILE_CHOOSER_REQUEST = 1001;
 
-    private ValueCallback<Uri[]> filePathCallback;
+              private ValueCallback<Uri[]> filePathCallback;
 
-    private static final int FILE_CHOOSER_REQUEST = 1001;
+              private WebView webView;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
 
-        super.onCreate(savedInstanceState);
+                  webView = new WebView(this);
 
-        webView = new WebView(this);
+                  WebSettings settings = webView.getSettings();
 
-        WebSettings settings = webView.getSettings();
+                  settings.setJavaScriptEnabled(true);
+                  settings.setDomStorageEnabled(true);
+                  settings.setAllowFileAccess(true);
+                  settings.setAllowContentAccess(true);
+                  settings.setDatabaseEnabled(true);
 
-        settings.setJavaScriptEnabled(true);
+                  settings.setBuiltInZoomControls(false);
+                  settings.setDisplayZoomControls(false);
 
-        settings.setDomStorageEnabled(true);
+                  webView.setWebViewClient(new WebViewClient() {
 
-        settings.setAllowFileAccess(true);
+                      @Override
+                      public boolean shouldOverrideUrlLoading(
+                              WebView view,
+                              WebResourceRequest request) {
 
-        settings.setAllowContentAccess(true);
+                          return false;
+                      }
+                  });
 
-        settings.setBuiltInZoomControls(false);
+                  webView.setWebChromeClient(new WebChromeClient() {
 
-        settings.setDisplayZoomControls(false);
+                      @Override
+                      public boolean onShowFileChooser(
+                              WebView webView,
+                              ValueCallback<Uri[]> filePathCallback,
+                              FileChooserParams fileChooserParams) {
 
-        webView.setWebViewClient(new WebViewClient());
+                          if (MainActivity.this.filePathCallback != null) {
+                              MainActivity.this.filePathCallback.onReceiveValue(null);
+                          }
 
-        webView.setWebChromeClient(new WebChromeClient() {
+                          MainActivity.this.filePathCallback = filePathCallback;
 
-            @Override
-            public boolean onShowFileChooser(
-                    WebView view,
-                    ValueCallback<Uri[]> callback,
-                    FileChooserParams params) {
+                          Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
 
-                if (filePathCallback != null) {
+                          intent.addCategory(Intent.CATEGORY_OPENABLE);
 
-                    filePathCallback.onReceiveValue(null);
+                          intent.setType("*/*");
 
-                }
+                          intent.putExtra(
+                                  Intent.EXTRA_MIME_TYPES,
+                                  new String[] {
+                                          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                          "application/vnd.ms-excel",
+                                          "text/csv",
+                                          "application/csv",
+                                          "text/comma-separated-values"
+                                  }
+                          );
 
-                filePathCallback = callback;
+                          startActivityForResult(
+                                  Intent.createChooser(
+                                          intent,
+                                          "انتخاب فایل Excel"
+                                  ),
+                                  FILE_CHOOSER_REQUEST
+                          );
 
-                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                          return true;
+                      }
+                  });
 
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                  webView.loadUrl(
+                          "file:///android_asset/index.html"
+                  );
 
-                intent.setType("*/*");
+                  setContentView(webView);
+              }
 
-                intent.putExtra(
-                        Intent.EXTRA_MIME_TYPES,
-                        new String[] {
-                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                                "application/vnd.ms-excel",
-                                "text/csv",
-                                "application/csv",
-                                "text/comma-separated-values"
-                        }
-                );
+              @Override
+              protected void onActivityResult(
+                      int requestCode,
+                      int resultCode,
+                      Intent data) {
 
-                try {
+                  super.onActivityResult(
+                          requestCode,
+                          resultCode,
+                          data
+                  );
 
-                    startActivityForResult(
-                            Intent.createChooser(
-                                    intent,
-                                    "انتخاب فایل Excel"
-                            ),
-                            FILE_CHOOSER_REQUEST
-                    );
+                  if (requestCode != FILE_CHOOSER_REQUEST) {
+                      return;
+                  }
 
-                } catch (Exception e) {
+                  if (filePathCallback == null) {
+                      return;
+                  }
 
-                    filePathCallback = null;
+                  Uri[] results = null;
 
-                    return false;
-                }
+                  if (resultCode == Activity.RESULT_OK && data != null) {
 
-                return true;
-            }
-        });
+                      Uri uri = data.getData();
 
-        webView.loadUrl("file:///android_asset/index.html");
+                      if (uri != null) {
+                          results = new Uri[]{uri};
+                      }
+                  }
 
-        setContentView(webView);
-    }
+                  filePathCallback.onReceiveValue(results);
 
-    @Override
-    protected void onActivityResult(
-            int requestCode,
-            int resultCode,
-            Intent data) {
+                  filePathCallback = null;
+              }
 
-        super.onActivityResult(
-                requestCode,
-                resultCode,
-                data
-        );
+              @Override
+              public void onBackPressed() {
 
-        if (requestCode != FILE_CHOOSER_REQUEST) {
+                  if (webView != null && webView.canGoBack()) {
+                      webView.goBack();
+                  } else {
+                      super.onBackPressed();
+                  }
+              }
+          }
+          EOF
 
-            return;
-        }
-
-        if (filePathCallback == null) {
-
-            return;
-        }
-
-        Uri[] results = null;
-
-        if (resultCode == RESULT_OK && data != null) {
-
-            Uri uri = data.getData();
-
-            if (uri != null) {
-
-                results = new Uri[] {
-                        uri
-                };
-            }
-        }
-
-        filePathCallback.onReceiveValue(results);
-
-        filePathCallback = null;
-    }
-
-    @Override
-    public void onBackPressed() {
-
-        if (webView != null && webView.canGoBack()) {
-
-            webView.goBack();
-
-        } else {
-
-            super.onBackPressed();
-        }
-    }
-}
-EOF
-
-      - name: Create HakanNovin interface
+      # ---------------------------------------------------------
+      # Create HTML application
+      # ---------------------------------------------------------
+      - name: Create HakanNovin V3.2
         shell: bash
         run: |
 
           cat > app/src/main/assets/index.html <<'EOF'
-<!DOCTYPE html>
+          <!DOCTYPE html>
+
+          <html lang="fa" dir="rtl">
 
-<html lang="fa" dir="rtl">
+          <head>
+
+          <meta charset="UTF-8">
+
+          <meta
+              name="viewport"
+              content="width=device-width,initial-scale=1,maximum-scale=1"
+          >
+
+          <meta
+              name="theme-color"
+              content="#087F8C"
+          >
+
+          <title>هاکان نوین</title>
+
+          <script src="xlsx.full.min.js"></script>
+
+          <style>
 
-<head>
+          *{
+              box-sizing:border-box;
+              font-family:
+                  Tahoma,
+                  Arial,
+                  sans-serif;
+          }
 
-<meta charset="UTF-8">
+          body{
+              margin:0;
+              background:#F3F8F9;
+              color:#17373C;
+          }
 
-<meta
-    name="viewport"
-    content="width=device-width,initial-scale=1"
-/>
+          header{
+              background:
+                  linear-gradient(
+                      135deg,
+                      #087F8C,
+                      #12A6A0
+                  );
 
-<title>هاکان نوین</title>
+              color:white;
 
-<script src="xlsx.full.min.js"></script>
+              padding:
+                  24px
+                  18px
+                  28px;
 
-<style>
+              border-radius:
+                  0
+                  0
+                  28px
+                  28px;
 
-*{
-    box-sizing:border-box;
-    font-family:
-        Tahoma,
-        Arial,
-        sans-serif;
-}
+              box-shadow:
+                  0
+                  5px
+                  18px
+                  rgba(0,0,0,.14);
+          }
 
-body{
-    margin:0;
-    background:#f3f8f9;
-    color:#17363b;
-}
+          header .logo{
+              width:58px;
+              height:58px;
 
-header{
-    background:
-        linear-gradient(
-            135deg,
-            #066f7a,
-            #10a5a0
-        );
+              display:flex;
+              align-items:center;
+              justify-content:center;
 
-    color:white;
+              background:
+                  rgba(255,255,255,.18);
 
-    padding:
-        22px
-        18px;
+              border:
+                  1px solid
+                  rgba(255,255,255,.3);
 
-    border-radius:
-        0
-        0
-        28px
-        28px;
+              border-radius:18px;
 
-    box-shadow:
-        0 5px 18px
-        rgba(0,0,0,.15);
-}
+              font-size:31px;
 
-.logo{
-    width:58px;
-    height:58px;
+              margin-bottom:12px;
+          }
 
-    border-radius:18px;
+          header h1{
+              margin:0;
+              font-size:25px;
+          }
 
-    background:white;
+          header p{
+              margin:
+                  7px
+                  0
+                  0;
 
-    display:flex;
-    align-items:center;
-    justify-content:center;
+              opacity:.9;
+              font-size:14px;
+          }
 
-    font-size:32px;
+          .container{
+              width:100%;
+              max-width:850px;
+              margin:auto;
+              padding:15px;
+          }
 
-    margin-bottom:10px;
+          .stats{
+              display:grid;
+              grid-template-columns:
+                  repeat(2,1fr);
 
-    box-shadow:
-        0 4px 12px
-        rgba(0,0,0,.15);
-}
+              gap:10px;
 
-header h1{
-    margin:0;
+              margin-top:-4px;
+          }
 
-    font-size:25px;
-}
+          .stat{
+              background:white;
 
-header p{
-    margin:
-        7px
-        0
-        0;
+              border-radius:18px;
 
-    opacity:.9;
-}
+              padding:16px;
 
-.container{
-    max-width:850px;
+              box-shadow:
+                  0
+                  3px
+                  12px
+                  rgba(0,0,0,.07);
+          }
 
-    margin:auto;
+          .stat b{
+              display:block;
 
-    padding:15px;
-}
+              color:#087F8C;
 
-.stats{
-    display:grid;
+              font-size:25px;
 
-    grid-template-columns:
-        repeat(2,1fr);
+              margin-bottom:5px;
+          }
 
-    gap:10px;
+          .toolbar{
+              display:grid;
 
-    margin-top:-3px;
-}
+              grid-template-columns:
+                  repeat(2,1fr);
 
-.stat{
-    background:white;
+              gap:9px;
 
-    padding:17px;
+              margin:
+                  15px
+                  0
+                  10px;
+          }
 
-    border-radius:18px;
+          button{
+              border:0;
 
-    box-shadow:
-        0 3px 12px
-        rgba(0,0,0,.07);
-}
+              border-radius:14px;
 
-.stat b{
-    display:block;
+              padding:
+                  13px
+                  12px;
 
-    font-size:25px;
+              font-size:14px;
 
-    color:#087f8c;
+              min-height:47px;
 
-    margin-bottom:5px;
-}
+              cursor:pointer;
+          }
 
-.toolbar{
-    display:grid;
+          .primary{
+              background:#087F8C;
+              color:white;
+          }
 
-    grid-template-columns:
-        1fr
-        1fr;
+          .secondary{
+              background:#DFF2F3;
+              color:#087F8C;
+          }
 
-    gap:9px;
+          .danger{
+              background:#FFE5E5;
+              color:#A40020;
+          }
 
-    margin:
-        15px
-        0
-        10px;
-}
+          .search{
+              width:100%;
 
-button{
-    border:0;
+              border:
+                  1px solid
+                  #D8E4E6;
 
-    border-radius:13px;
+              background:white;
 
-    padding:
-        13px
-        12px;
+              border-radius:14px;
 
-    font-size:14px;
+              padding:
+                  14px;
 
-    cursor:pointer;
-}
+              font-size:15px;
 
-.primary{
-    background:#087f8c;
-    color:white;
-}
+              outline:none;
 
-.secondary{
-    background:#dff3f4;
-    color:#08717a;
-}
+              margin:
+                  5px
+                  0
+                  10px;
+          }
 
-.danger{
-    background:#ffe4e4;
-    color:#b00020;
-}
+          .search:focus{
+              border-color:#087F8C;
+          }
 
-.search{
-    margin:
-        5px
-        0
-        10px;
-}
+          .customer{
+              background:white;
 
-input,
-textarea{
-    width:100%;
+              border-radius:17px;
 
-    border:
-        1px solid
-        #d5e2e4;
+              padding:15px;
 
-    border-radius:12px;
+              margin:
+                  9px
+                  0;
 
-    padding:13px;
+              box-shadow:
+                  0
+                  3px
+                  12px
+                  rgba(0,0,0,.06);
+          }
 
-    font-size:15px;
+          .customer-name{
+              font-size:17px;
+              font-weight:bold;
+          }
 
-    background:white;
+          .info{
+              color:#667D81;
 
-    outline:none;
-}
+              font-size:13px;
 
-input:focus,
-textarea:focus{
-    border-color:#087f8c;
-}
+              margin-top:6px;
 
-textarea{
-    min-height:85px;
+              line-height:1.8;
+          }
 
-    resize:vertical;
-}
+          .actions{
+              display:flex;
 
-.customer{
-    background:white;
+              gap:7px;
 
-    border-radius:17px;
+              flex-wrap:wrap;
 
-    padding:15px;
+              margin-top:10px;
+          }
 
-    margin:
-        9px
-        0;
+          .actions button{
+              min-height:40px;
+              padding:9px 12px;
+          }
 
-    box-shadow:
-        0 3px 12px
-        rgba(0,0,0,.06);
-}
+          .empty{
+              text-align:center;
 
-.customerName{
-    font-size:17px;
+              background:white;
 
-    font-weight:bold;
+              border-radius:18px;
 
-    margin-bottom:6px;
-}
+              padding:35px 15px;
 
-.info{
-    color:#667d81;
+              color:#718487;
+          }
 
-    font-size:13px;
+          .message{
+              display:none;
 
-    line-height:1.9;
-}
+              padding:13px;
 
-.actions{
-    display:flex;
+              background:#E4F8EB;
 
-    flex-wrap:wrap;
+              color:#176B3A;
 
-    gap:7px;
+              border-radius:14px;
 
-    margin-top:10px;
-}
+              margin:
+                  10px
+                  0;
+          }
 
-.empty{
-    text-align:center;
+          .modal{
+              display:none;
 
-    background:white;
+              position:fixed;
 
-    border-radius:17px;
+              inset:0;
 
-    padding:35px 15px;
+              background:
+                  rgba(0,0,0,.72);
 
-    color:#718488;
-}
+              z-index:100;
 
-.message{
-    display:none;
+              padding:14px;
 
-    padding:13px;
+              overflow:auto;
+          }
 
-    border-radius:13px;
+          .modal-box{
+              background:white;
 
-    margin:
-        10px
-        0;
+              max-width:720px;
 
-    background:#e3f7eb;
+              margin:
+                  20px
+                  auto;
 
-    color:#13733f;
-}
+              border-radius:22px;
 
-.warning{
-    background:#fff3d7;
+              padding:18px;
+          }
 
-    color:#805e00;
+          .modal-box h2{
+              margin-top:0;
+          }
 
-    padding:12px;
+          .field{
+              margin:
+                  10px
+                  0;
+          }
 
-    border-radius:13px;
+          .field label{
+              display:block;
 
-    margin:
-        10px
-        0;
+              font-size:13px;
 
-    font-size:13px;
-}
+              color:#63777A;
 
-.modal{
-    display:none;
+              margin-bottom:5px;
+          }
 
-    position:fixed;
+          .field input,
+          .field textarea{
+              width:100%;
 
-    inset:0;
+              border:
+                  1px solid
+                  #D8E4E6;
 
-    background:
-        rgba(0,0,0,.65);
+              border-radius:12px;
 
-    z-index:100;
+              padding:13px;
 
-    padding:15px;
+              font-size:15px;
 
-    overflow:auto;
-}
+              background:white;
 
-.modalBox{
-    max-width:700px;
+              outline:none;
+          }
 
-    margin:
-        20px
-        auto;
+          .field textarea{
+              min-height:80px;
+              resize:vertical;
+          }
 
-    background:white;
+          .modal-actions{
+              display:flex;
 
-    border-radius:22px;
+              gap:8px;
 
-    padding:18px;
-}
+              margin-top:15px;
+          }
 
-.modalBox h2{
-    margin-top:0;
-}
+          .modal-actions button{
+              flex:1;
+          }
 
-.field{
-    margin:
-        10px
-        0;
-}
+          .import-box{
+              background:#F0FAFA;
 
-.field label{
-    display:block;
+              border:
+                  1px solid
+                  #D0EEEE;
 
-    color:#607477;
+              border-radius:16px;
 
-    font-size:13px;
+              padding:13px;
 
-    margin-bottom:5px;
-}
+              margin:
+                  10px
+                  0;
 
-.importBox{
-    background:white;
+              font-size:13px;
 
-    border-radius:17px;
+              line-height:1.9;
+          }
 
-    padding:15px;
+          .version{
+              text-align:center;
 
-    margin:
-        10px
-        0;
+              color:#9AAEB1;
 
-    box-shadow:
-        0 3px 12px
-        rgba(0,0,0,.06);
-}
+              font-size:11px;
 
-.importTitle{
-    font-weight:bold;
+              margin:
+                  25px
+                  0;
+          }
 
-    margin-bottom:8px;
-}
+          </style>
 
-.small{
-    font-size:12px;
+          </head>
 
-    color:#718488;
 
-    line-height:1.8;
-}
+          <body>
 
-</style>
+          <header>
 
-</head>
+              <div class="logo">
+                  💧
+              </div>
 
+              <h1>
+                  هاکان نوین
+              </h1>
 
-<body>
+              <p>
+                  مدیریت مشتریان و سرویس تصفیه آب
+              </p>
 
+          </header>
 
-<header>
 
-    <div class="logo">
-        💧
-    </div>
+          <div class="container">
 
-    <h1>
-        هاکان نوین
-    </h1>
+              <div class="stats">
 
-    <p>
-        مدیریت مشتریان و خدمات تصفیه آب
-    </p>
+                  <div class="stat">
 
-</header>
+                      <b id="total">
+                          0
+                      </b>
 
+                      مشتری
+                  </div>
 
-<div class="container">
+                  <div class="stat">
 
+                      <b id="phoneCount">
+                          0
+                      </b>
 
-    <div class="stats">
+                      دارای شماره
+                  </div>
 
-        <div class="stat">
+              </div>
 
-            <b id="total">
-                0
-            </b>
 
-            کل مشتریان
+              <div
+                  id="message"
+                  class="message">
+              </div>
 
-        </div>
 
+              <div class="toolbar">
 
-        <div class="stat">
+                  <button
+                      class="primary"
+                      onclick="openAdd()">
 
-            <b id="phones">
-                0
-            </b>
+                      ➕ مشتری جدید
 
-            دارای شماره
+                  </button>
 
-        </div>
 
-    </div>
+                  <button
+                      class="secondary"
+                      onclick="openExcelPicker()">
 
+                      📥 ورود Excel
 
-    <div
-        id="message"
-        class="message">
-    </div>
+                  </button>
 
 
-    <div class="importBox">
+                  <!--
+                      This input is intentionally hidden.
+                      Android V3.2 MainActivity handles
+                      the file chooser.
+                  -->
 
-        <div class="importTitle">
-            📊 ورود مشتریان از Excel
-        </div>
+                  <input
+                      id="excelInput"
+                      type="file"
+                      accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
+                      style="display:none"
+                  >
 
-        <div class="small">
 
-            فایل Excel را انتخاب کن.
-            برنامه تمام شیت‌های فایل را بررسی می‌کند
-            و شیتی که اطلاعات مشتری داشته باشد را پیدا می‌کند.
+                  <button
+                      class="secondary"
+                      onclick="exportExcel()">
 
-            <br>
+                      📤 خروجی Excel
 
-            شیت خالی مثل Sheet3 نادیده گرفته می‌شود.
+                  </button>
 
-        </div>
 
-    </div>
+                  <button
+                      class="danger"
+                      onclick="clearCustomers()">
 
+                      🗑 حذف همه
 
-    <div class="toolbar">
+                  </button>
 
+              </div>
 
-        <button
-            class="primary"
-            onclick="openAdd()">
 
-            ➕ مشتری جدید
+              <div class="import-box">
 
-        </button>
+                  📌
+                  برای ورود اطلاعات، روی
+                  <b>«ورود Excel»</b>
+                  بزن و فایل Excel را از گوشی انتخاب کن.
 
+                  <br>
 
-        <button
-            class="secondary"
-            onclick="openExcel()">
+                  برنامه تمام شیت‌های فایل را بررسی می‌کند و
+                  شیتی که اطلاعات مشتری داشته باشد را پیدا می‌کند.
 
-            📥 ورود Excel
+              </div>
 
-        </button>
 
+              <input
+                  id="search"
+                  class="search"
+                  placeholder="🔎 جستجوی نام، شماره، آدرس یا دستگاه..."
+              >
 
-        <button
-            class="secondary"
-            onclick="exportExcel()">
 
-            📤 خروجی Excel
+              <div id="list"></div>
 
-        </button>
 
+              <div class="version">
+                  Hakan Novin V3.2
+              </div>
 
-        <button
-            class="danger"
-            onclick="clearCustomers()">
+          </div>
 
-            🗑 حذف همه
 
-        </button>
+          <!-- ================================================= -->
+          <!-- CUSTOMER MODAL -->
+          <!-- ================================================= -->
 
+          <div
+              id="customerModal"
+              class="modal">
 
-    </div>
+              <div class="modal-box">
 
+                  <h2 id="modalTitle">
+                      مشتری جدید
+                  </h2>
 
-    <!--
-        این input عمداً مخفی است.
-        وقتی روی ورود Excel می‌زنیم،
-        Android File Picker باز می‌شود.
-    -->
 
-    <input
-        id="excel"
-        type="file"
-        accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
-        style="display:none"
-        onchange="importExcel(event)"
-    />
+                  <div class="field">
+                      <label>
+                          نام و نام خانوادگی
+                      </label>
 
+                      <input id="f_name">
+                  </div>
 
-    <input
-        id="search"
-        class="search"
-        placeholder="🔎 جستجوی نام، شماره، آدرس یا دستگاه..."
-        oninput="render()"
-    />
 
+                  <div class="field">
+                      <label>
+                          شماره تماس
+                      </label>
 
-    <div id="list">
-    </div>
+                      <input
+                          id="f_phone"
+                          inputmode="tel">
+                  </div>
 
 
-</div>
+                  <div class="field">
+                      <label>
+                          آدرس
+                      </label>
 
+                      <textarea id="f_address"></textarea>
+                  </div>
 
 
-<div
-    id="modal"
-    class="modal">
+                  <div class="field">
+                      <label>
+                          نوع دستگاه
+                      </label>
 
+                      <input id="f_device">
+                  </div>
 
-    <div class="modalBox">
 
+                  <div class="field">
+                      <label>
+                          تاریخ نصب
+                      </label>
 
-        <h2 id="modalTitle">
-            مشتری جدید
-        </h2>
+                      <input
+                          id="f_install"
+                          placeholder="مثلاً 1404/02/15">
+                  </div>
 
 
-        <div class="field">
+                  <div class="field">
+                      <label>
+                          آخرین تعویض فیلتر
+                      </label>
 
-            <label>
-                نام و نام خانوادگی
-            </label>
+                      <input
+                          id="f_filter"
+                          placeholder="مثلاً 1404/08/15">
+                  </div>
 
-            <input id="f_name">
 
-        </div>
+                  <div class="field">
+                      <label>
+                          تاریخ بعدی
+                      </label>
 
+                      <input
+                          id="f_next"
+                          placeholder="مثلاً 1405/02/15">
+                  </div>
 
-        <div class="field">
 
-            <label>
-                شماره تماس
-            </label>
+                  <div class="field">
+                      <label>
+                          فیلتر ۵ و ۶
+                      </label>
 
-            <input
-                id="f_phone"
-                inputmode="tel">
+                      <input id="f_f56">
+                  </div>
 
-        </div>
 
+                  <div class="field">
+                      <label>
+                          ممبران
+                      </label>
 
-        <div class="field">
+                      <input id="f_membrane">
+                  </div>
 
-            <label>
-                آدرس
-            </label>
 
-            <textarea id="f_address"></textarea>
+                  <div class="field">
+                      <label>
+                          ملاحظات
+                      </label>
 
-        </div>
+                      <textarea id="f_notes"></textarea>
+                  </div>
 
 
-        <div class="field">
+                  <div class="field">
+                      <label>
+                          بدهکاری
+                      </label>
 
-            <label>
-                نوع دستگاه
-            </label>
+                      <input id="f_debt">
+                  </div>
 
-            <input id="f_device">
 
-        </div>
+                  <div class="modal-actions">
 
+                      <button
+                          class="primary"
+                          onclick="saveCustomer()">
 
-        <div class="field">
+                          💾 ذخیره
 
-            <label>
-                تاریخ نصب
-            </label>
+                      </button>
 
-            <input
-                id="f_install"
-                placeholder="مثلاً 1404/02/15">
+                      <button
+                          class="secondary"
+                          onclick="closeModal()">
 
-        </div>
+                          انصراف
 
+                      </button>
 
-        <div class="field">
+                  </div>
 
-            <label>
-                آخرین تعویض فیلتر
-            </label>
+              </div>
 
-            <input
-                id="f_filter"
-                placeholder="مثلاً 1404/08/15">
+          </div>
 
-        </div>
 
+          <script>
 
-        <div class="field">
+          /*
+           * =====================================================
+           * HAKAN NOVIN V3.2
+           * =====================================================
+           */
 
-            <label>
-                تاریخ بعدی سرویس
-            </label>
 
-            <input
-                id="f_next"
-                placeholder="مثلاً 1405/02/15">
+          let customers = [];
 
-        </div>
+          let editIndex = -1;
 
 
-        <div class="field">
+          const STORAGE_KEY =
+              "hakan_novin_customers_v32";
 
-            <label>
-                فیلتر ۵ و ۶
-            </label>
 
-            <input id="f_f56">
+          /*
+           * =====================================================
+           * LOAD
+           * =====================================================
+           */
 
-        </div>
+          function loadCustomers(){
 
+              try{
 
-        <div class="field">
+                  const old =
+                      localStorage.getItem(
+                          STORAGE_KEY
+                      );
 
-            <label>
-                ممبران
-            </label>
+                  if(old){
 
-            <input id="f_membrane">
+                      customers =
+                          JSON.parse(old);
 
-        </div>
+                      if(!Array.isArray(customers)){
+                          customers=[];
+                      }
 
+                  }else{
 
-        <div class="field">
+                      /*
+                       * If V3.1 already had data,
+                       * migrate it automatically.
+                       */
 
-            <label>
-                ملاحظات
-            </label>
+                      const previous =
+                          localStorage.getItem(
+                              "hakan_novin_customers"
+                          );
 
-            <textarea id="f_notes"></textarea>
+                      if(previous){
 
-        </div>
+                          customers =
+                              JSON.parse(previous);
 
+                          if(!Array.isArray(customers)){
+                              customers=[];
+                          }
 
-        <div class="field">
+                          saveCustomers();
+                      }
 
-            <label>
-                بدهکاری
-            </label>
+                  }
 
-            <input id="f_debt">
+              }catch(error){
 
-        </div>
+                  console.error(error);
 
+                  customers=[];
 
-        <div class="actions">
+              }
 
+              render();
+          }
 
-            <button
-                class="primary"
-                onclick="saveCustomer()">
 
-                💾 ذخیره
+          function saveCustomers(){
 
-            </button>
+              localStorage.setItem(
+                  STORAGE_KEY,
+                  JSON.stringify(customers)
+              );
 
+          }
 
-            <button
-                class="secondary"
-                onclick="closeModal()">
 
-                انصراف
+          /*
+           * =====================================================
+           * MESSAGE
+           * =====================================================
+           */
 
-            </button>
+          function showMessage(text){
 
+              const box =
+                  document.getElementById(
+                      "message"
+                  );
 
-        </div>
+              box.textContent=text;
 
+              box.style.display="block";
 
-    </div>
+              setTimeout(
+                  function(){
 
-</div>
+                      box.style.display="none";
 
+                  },
+                  4500
+              );
+          }
 
 
-<script>
+          /*
+           * =====================================================
+           * CUSTOMER MODAL
+           * =====================================================
+           */
 
+          function openAdd(){
 
-let customers = [];
+              editIndex=-1;
 
-let editIndex = -1;
+              document.getElementById(
+                  "modalTitle"
+              ).textContent =
+                  "مشتری جدید";
 
+              const fields=[
+                  "f_name",
+                  "f_phone",
+                  "f_address",
+                  "f_device",
+                  "f_install",
+                  "f_filter",
+                  "f_next",
+                  "f_f56",
+                  "f_membrane",
+                  "f_notes",
+                  "f_debt"
+              ];
 
-/* -----------------------------
-   ذخیره و بارگذاری
------------------------------ */
+              fields.forEach(
+                  function(id){
 
+                      document.getElementById(
+                          id
+                      ).value="";
 
-function loadCustomers(){
+                  }
+              );
 
-    try{
+              document.getElementById(
+                  "customerModal"
+              ).style.display="block";
+          }
 
-        const data =
-            localStorage.getItem(
-                "hakan_novin_customers_v32"
-            );
 
-        customers =
-            data
-            ? JSON.parse(data)
-            : [];
+          function closeModal(){
 
-        if(!Array.isArray(customers)){
+              document.getElementById(
+                  "customerModal"
+              ).style.display="none";
+          }
 
-            customers = [];
 
-        }
+          function saveCustomer(){
 
-    }catch(e){
+              const customer={
 
-        customers = [];
+                  name:
+                      document.getElementById(
+                          "f_name"
+                      ).value.trim(),
 
-    }
+                  phone:
+                      document.getElementById(
+                          "f_phone"
+                      ).value.trim(),
 
-    render();
-}
+                  address:
+                      document.getElementById(
+                          "f_address"
+                      ).value.trim(),
 
+                  device:
+                      document.getElementById(
+                          "f_device"
+                      ).value.trim(),
 
-function saveCustomers(){
+                  install:
+                      document.getElementById(
+                          "f_install"
+                      ).value.trim(),
 
-    localStorage.setItem(
-        "hakan_novin_customers_v32",
-        JSON.stringify(customers)
-    );
+                  filter:
+                      document.getElementById(
+                          "f_filter"
+                      ).value.trim(),
 
-    render();
-}
+                  next:
+                      document.getElementById(
+                          "f_next"
+                      ).value.trim(),
 
+                  f56:
+                      document.getElementById(
+                          "f_f56"
+                      ).value.trim(),
 
-/* -----------------------------
-   پیام
------------------------------ */
+                  membrane:
+                      document.getElementById(
+                          "f_membrane"
+                      ).value.trim(),
 
+                  notes:
+                      document.getElementById(
+                          "f_notes"
+                      ).value.trim(),
 
-function showMessage(text){
+                  debt:
+                      document.getElementById(
+                          "f_debt"
+                      ).value.trim()
+              };
 
-    const box =
-        document.getElementById("message");
 
-    box.textContent = text;
+              if(
+                  !customer.name &&
+                  !customer.phone
+              ){
 
-    box.style.display = "block";
+                  alert(
+                      "حداقل نام یا شماره تماس را وارد کن."
+                  );
 
-    setTimeout(function(){
+                  return;
+              }
 
-        box.style.display = "none";
 
-    },5000);
-}
+              if(editIndex>=0){
 
+                  customers[editIndex]={
+                      ...customers[editIndex],
+                      ...customer
+                  };
 
-/* -----------------------------
-   مشتری جدید
------------------------------ */
+                  showMessage(
+                      "اطلاعات مشتری ویرایش شد."
+                  );
 
+              }else{
 
-function openAdd(){
+                  customers.push(
+                      customer
+                  );
 
-    editIndex = -1;
+                  showMessage(
+                      "مشتری با موفقیت اضافه شد."
+                  );
+              }
 
-    document.getElementById(
-        "modalTitle"
-    ).textContent = "مشتری جدید";
 
+              saveCustomers();
 
-    const ids = [
+              render();
 
-        "f_name",
-        "f_phone",
-        "f_address",
-        "f_device",
-        "f_install",
-        "f_filter",
-        "f_next",
-        "f_f56",
-        "f_membrane",
-        "f_notes",
-        "f_debt"
+              closeModal();
+          }
 
-    ];
 
+          function editCustomer(index){
 
-    ids.forEach(function(id){
+              const c =
+                  customers[index];
 
-        document.getElementById(id).value = "";
+              if(!c)
+                  return;
 
-    });
+              editIndex=index;
 
+              document.getElementById(
+                  "modalTitle"
+              ).textContent =
+                  "ویرایش مشتری";
 
-    document.getElementById(
-        "modal"
-    ).style.display = "block";
-}
 
+              document.getElementById(
+                  "f_name"
+              ).value =
+                  c.name || "";
 
-function closeModal(){
 
-    document.getElementById(
-        "modal"
-    ).style.display = "none";
-}
+              document.getElementById(
+                  "f_phone"
+              ).value =
+                  c.phone || "";
 
 
-/* -----------------------------
-   ذخیره مشتری
------------------------------ */
+              document.getElementById(
+                  "f_address"
+              ).value =
+                  c.address || "";
 
 
-function saveCustomer(){
+              document.getElementById(
+                  "f_device"
+              ).value =
+                  c.device || "";
 
-    const c = {
 
-        name:
-            document
-            .getElementById("f_name")
-            .value
-            .trim(),
+              document.getElementById(
+                  "f_install"
+              ).value =
+                  c.install || "";
 
-        phone:
-            document
-            .getElementById("f_phone")
-            .value
-            .trim(),
 
-        address:
-            document
-            .getElementById("f_address")
-            .value
-            .trim(),
+              document.getElementById(
+                  "f_filter"
+              ).value =
+                  c.filter || "";
 
-        device:
-            document
-            .getElementById("f_device")
-            .value
-            .trim(),
 
-        install:
-            document
-            .getElementById("f_install")
-            .value
-            .trim(),
+              document.getElementById(
+                  "f_next"
+              ).value =
+                  c.next || "";
 
-        filter:
-            document
-            .getElementById("f_filter")
-            .value
-            .trim(),
 
-        next:
-            document
-            .getElementById("f_next")
-            .value
-            .trim(),
+              document.getElementById(
+                  "f_f56"
+              ).value =
+                  c.f56 || "";
 
-        f56:
-            document
-            .getElementById("f_f56")
-            .value
-            .trim(),
 
-        membrane:
-            document
-            .getElementById("f_membrane")
-            .value
-            .trim(),
+              document.getElementById(
+                  "f_membrane"
+              ).value =
+                  c.membrane || "";
 
-        notes:
-            document
-            .getElementById("f_notes")
-            .value
-            .trim(),
 
-        debt:
-            document
-            .getElementById("f_debt")
-            .value
-            .trim()
+              document.getElementById(
+                  "f_notes"
+              ).value =
+                  c.notes || "";
 
-    };
 
+              document.getElementById(
+                  "f_debt"
+              ).value =
+                  c.debt || "";
 
-    if(!c.name && !c.phone){
 
-        alert(
-            "حداقل نام یا شماره تماس را وارد کن."
-        );
+              document.getElementById(
+                  "customerModal"
+              ).style.display="block";
+          }
 
-        return;
-    }
 
+          function deleteCustomer(index){
 
-    if(editIndex >= 0){
+              if(
+                  !confirm(
+                      "این مشتری حذف شود؟"
+                  )
+              ){
+                  return;
+              }
 
-        customers[editIndex] = {
+              customers.splice(
+                  index,
+                  1
+              );
 
-            ...customers[editIndex],
+              saveCustomers();
 
-            ...c
+              render();
 
-        };
+              showMessage(
+                  "مشتری حذف شد."
+              );
+          }
 
-    }else{
 
-        customers.push(c);
+          /*
+           * =====================================================
+           * SEARCH + RENDER
+           * =====================================================
+           */
 
-    }
+          document
+              .getElementById("search")
+              .addEventListener(
+                  "input",
+                  render
+              );
 
 
-    saveCustomers();
+          function render(){
 
-    closeModal();
+              document.getElementById(
+                  "total"
+              ).textContent =
+                  customers.length;
 
-    showMessage(
-        editIndex >= 0
-        ? "اطلاعات مشتری ویرایش شد."
-        : "مشتری با موفقیت اضافه شد."
-    );
-}
 
+              document.getElementById(
+                  "phoneCount"
+              ).textContent =
+                  customers.filter(
+                      function(c){
+                          return Boolean(c.phone);
+                      }
+                  ).length;
 
-/* -----------------------------
-   ویرایش
------------------------------ */
 
+              const query =
+                  document.getElementById(
+                      "search"
+                  ).value
+                  .trim()
+                  .toLowerCase();
 
-function editCustomer(index){
 
-    const c =
-        customers[index];
+              const list =
+                  document.getElementById(
+                      "list"
+                  );
 
-    editIndex = index;
 
+              const filtered =
+                  customers.filter(
+                      function(c){
 
-    document.getElementById(
-        "modalTitle"
-    ).textContent = "ویرایش مشتری";
+                          const text=[
+                              c.name,
+                              c.phone,
+                              c.address,
+                              c.device,
+                              c.notes
+                          ]
+                          .join(" ")
+                          .toLowerCase();
 
+                          return (
+                              !query ||
+                              text.includes(query)
+                          );
+                      }
+                  );
 
-    document.getElementById(
-        "f_name"
-    ).value = c.name || "";
 
+              if(!filtered.length){
 
-    document.getElementById(
-        "f_phone"
-    ).value = c.phone || "";
+                  list.innerHTML =
+                      `
+                      <div class="empty">
+                          هنوز مشتری‌ای پیدا نشد.
+                      </div>
+                      `;
 
+                  return;
+              }
 
-    document.getElementById(
-        "f_address"
-    ).value = c.address || "";
 
+              list.innerHTML =
+                  filtered
+                  .map(
+                      function(c){
 
-    document.getElementById(
-        "f_device"
-    ).value = c.device || "";
+                          const index =
+                              customers.indexOf(c);
 
+                          return `
 
-    document.getElementById(
-        "f_install"
-    ).value = c.install || "";
+                          <div class="customer">
 
+                              <div class="customer-name">
+                                  ${escapeHtml(
+                                      c.name ||
+                                      "بدون نام"
+                                  )}
+                              </div>
 
-    document.getElementById(
-        "f_filter"
-    ).value = c.filter || "";
+                              <div class="info">
 
+                                  📞
+                                  ${escapeHtml(
+                                      c.phone ||
+                                      "بدون شماره"
+                                  )}
 
-    document.getElementById(
-        "f_next"
-    ).value = c.next || "";
+                                  <br>
 
+                                  📍
+                                  ${escapeHtml(
+                                      c.address ||
+                                      "بدون آدرس"
+                                  )}
 
-    document.getElementById(
-        "f_f56"
-    ).value = c.f56 || "";
+                                  <br>
 
+                                  💧
+                                  ${escapeHtml(
+                                      c.device ||
+                                      "نوع دستگاه ثبت نشده"
+                                  )}
 
-    document.getElementById(
-        "f_membrane"
-    ).value = c.membrane || "";
+                                  ${
+                                      c.next
+                                      ?
+                                      `<br>🗓 سرویس بعدی:
+                                      ${escapeHtml(c.next)}`
+                                      :
+                                      ""
+                                  }
 
+                              </div>
 
-    document.getElementById(
-        "f_notes"
-    ).value = c.notes || "";
 
+                              <div class="actions">
 
-    document.getElementById(
-        "f_debt"
-    ).value = c.debt || "";
+                                  ${
+                                      c.phone
+                                      ?
+                                      `
+                                      <button
+                                          class="secondary"
+                                          onclick="callCustomer('${escapeAttr(c.phone)}')">
 
+                                          📞 تماس
 
-    document.getElementById(
-        "modal"
-    ).style.display = "block";
-}
+                                      </button>
+                                      `
+                                      :
+                                      ""
+                                  }
 
 
-/* -----------------------------
-   حذف
------------------------------ */
+                                  <button
+                                      class="secondary"
+                                      onclick="editCustomer(${index})">
 
+                                      ✏️ ویرایش
 
-function deleteCustomer(index){
+                                  </button>
 
-    if(!confirm(
-        "این مشتری حذف شود؟"
-    )){
 
-        return;
-    }
+                                  <button
+                                      class="danger"
+                                      onclick="deleteCustomer(${index})">
 
+                                      حذف
 
-    customers.splice(
-        index,
-        1
-    );
+                                  </button>
 
+                              </div>
 
-    saveCustomers();
+                          </div>
 
-    showMessage(
-        "مشتری حذف شد."
-    );
-}
+                          `;
+                      }
+                  )
+                  .join("");
+          }
 
 
-/* -----------------------------
-   نمایش
------------------------------ */
+          function escapeHtml(value){
 
+              return String(value || "")
+                  .replace(/&/g,"&amp;")
+                  .replace(/</g,"&lt;")
+                  .replace(/>/g,"&gt;")
+                  .replace(/"/g,"&quot;")
+                  .replace(/'/g,"&#039;");
+          }
 
-function render(){
 
-    document.getElementById(
-        "total"
-    ).textContent =
-        customers.length;
+          function escapeAttr(value){
 
+              return String(value || "")
+                  .replace(/\\/g,"\\\\")
+                  .replace(/'/g,"\\'");
+          }
 
-    document.getElementById(
-        "phones"
-    ).textContent =
-        customers.filter(
-            function(c){
-                return c.phone;
-            }
-        ).length;
 
+          function callCustomer(phone){
 
-    const q =
-        document
-        .getElementById("search")
-        .value
-        .trim()
-        .toLowerCase();
+              window.location.href =
+                  "tel:" + phone;
+          }
 
 
-    const filtered =
-        customers.filter(
-            function(c){
+          /*
+           * =====================================================
+           * EXCEL FILE PICKER
+           * =====================================================
+           */
 
-                const text = [
+          function openExcelPicker(){
 
-                    c.name,
-                    c.phone,
-                    c.address,
-                    c.device,
-                    c.notes
+              const input =
+                  document.getElementById(
+                      "excelInput"
+                  );
 
-                ]
-                .join(" ")
-                .toLowerCase();
+              /*
+               * Reset value first.
+               * This allows selecting the same file again.
+               */
 
+              input.value="";
 
-                return !q ||
-                    text.includes(q);
-            }
-        );
+              input.click();
+          }
 
 
-    const list =
-        document.getElementById(
-            "list"
-        );
+          document
+              .getElementById("excelInput")
+              .addEventListener(
+                  "change",
+                  function(event){
 
+                      if(
+                          event.target.files &&
+                          event.target.files.length
+                      ){
 
-    if(!filtered.length){
+                          importExcelFile(
+                              event.target.files[0]
+                          );
+                      }
 
-        list.innerHTML =
-            '<div class="empty">' +
-            'هنوز مشتری‌ای ثبت نشده است.' +
-            '</div>';
+                  }
+              );
 
-        return;
-    }
 
+          /*
+           * =====================================================
+           * PERSIAN NORMALIZATION
+           * =====================================================
+           */
 
-    list.innerHTML =
-        filtered
-        .map(
-            function(c){
+          function normalizeText(value){
 
-                const i =
-                    customers.indexOf(c);
+              return String(value ?? "")
+                  .trim()
+                  .replace(/\u200c/g,"")
+                  .replace(/[يى]/g,"ی")
+                  .replace(/ك/g,"ک")
+                  .replace(/[۰-۹]/g,
+                      function(d){
+                          return
+                              "۰۱۲۳۴۵۶۷۸۹"
+                              .indexOf(d);
+                      }
+                  )
+                  .replace(/\s+/g,"")
+                  .toLowerCase();
+          }
 
 
-                return `
+          /*
+           * =====================================================
+           * CELL VALUE
+           * =====================================================
+           */
 
-                <div class="customer">
+          function cellValue(value){
 
-                    <div class="customerName">
+              if(
+                  value === undefined ||
+                  value === null
+              ){
+                  return "";
+              }
 
-                        ${escapeHtml(
-                            c.name ||
-                            "بدون نام"
-                        )}
+              let result =
+                  String(value).trim();
 
-                    </div>
+              /*
+               * Excel sometimes returns phone
+               * numbers such as 9301234567.0
+               */
 
+              if(
+                  /^\d{9,12}\.0$/.test(result)
+              ){
 
-                    <div class="info">
+                  result =
+                      result.substring(
+                          0,
+                          result.length-2
+                      );
+              }
 
-                        📞
-                        ${escapeHtml(
-                            c.phone ||
-                            "بدون شماره"
-                        )}
 
-                        <br>
+              /*
+               * If phone has 9xxxxxxxxx
+               * add the leading zero.
+               */
 
-                        📍
-                        ${escapeHtml(
-                            c.address ||
-                            "بدون آدرس"
-                        )}
+              if(
+                  /^9\d{9}$/.test(result)
+              ){
 
-                        <br>
+                  result =
+                      "0" + result;
+              }
 
-                        💧
-                        ${escapeHtml(
-                            c.device ||
-                            "نوع دستگاه ثبت نشده"
-                        )}
 
-                        ${
-                            c.next
-                            ?
-                            `<br>
-                             📅 سرویس بعدی:
-                             ${escapeHtml(c.next)}`
-                            :
-                            ""
-                        }
+              return result;
+          }
 
-                    </div>
 
+          /*
+           * =====================================================
+           * COLUMN ALIASES
+           * =====================================================
+           */
 
-                    <div class="actions">
+          const ALIASES={
 
-                        ${
-                            c.phone
-                            ?
-                            `
-                            <button
-                                class="secondary"
-                                onclick="callCustomer('${escapeAttr(c.phone)}')">
+              name:[
+                  "نام و نام خانوادگی",
+                  "نام مشتری",
+                  "نام",
+                  "مشتری"
+              ],
 
-                                📞 تماس
+              phone:[
+                  "شماره تماس",
+                  "شماره تلفن",
+                  "تلفن",
+                  "موبایل",
+                  "شماره"
+              ],
 
-                            </button>
-                            `
-                            :
-                            ""
-                        }
+              address:[
+                  "آدرس",
+                  "نشانی"
+              ],
 
+              device:[
+                  "نوع دستگاه",
+                  "مدل دستگاه",
+                  "دستگاه",
+                  "مدل"
+              ],
 
-                        <button
-                            class="secondary"
-                            onclick="editCustomer(${i})">
+              install:[
+                  "تاریخ نصب"
+              ],
 
-                            ✏️ ویرایش
+              filter:[
+                  "تعویض فیلتر",
+                  "آخرین تعویض فیلتر"
+              ],
 
-                        </button>
+              f56:[
+                  "فیلتر 5و6",
+                  "فیلتر ۵و۶",
+                  "فیلتر ۵ و ۶",
+                  "فیلتر5و6"
+              ],
 
+              next:[
+                  "تاریخ بعدی",
+                  "موعد سرویس بعدی",
+                  "سرویس بعدی"
+              ],
 
-                        <button
-                            class="danger"
-                            onclick="deleteCustomer(${i})">
+              membrane:[
+                  "ممبران"
+              ],
 
-                            حذف
+              notes:[
+                  "ملاحظات",
+                  "ملاحضات",
+                  "توضیحات",
+                  "یادداشت"
+              ],
 
-                        </button>
+              debt:[
+                  "بدهکاری",
+                  "بدهی"
+              ]
+          };
 
-                    </div>
 
-                </div>
+          function findColumn(
+              headers,
+              aliases
+          ){
 
-                `;
+              const wanted =
+                  aliases.map(
+                      normalizeText
+                  );
 
-            }
-        )
-        .join("");
-}
 
+              for(
+                  let i=0;
+                  i<headers.length;
+                  i++
+              ){
 
-/* -----------------------------
-   تماس
------------------------------ */
+                  const header =
+                      normalizeText(
+                          headers[i]
+                      );
 
 
-function callCustomer(phone){
+                  if(
+                      wanted.includes(header)
+                  ){
+                      return i;
+                  }
+              }
 
-    window.location.href =
-        "tel:" + phone;
-}
 
+              return -1;
+          }
 
-/* -----------------------------
-   امنیت نمایش متن
------------------------------ */
 
+          /*
+           * =====================================================
+           * FIND HEADER ROW
+           * =====================================================
+           *
+           * We don't assume the header is row 1.
+           * First 20 rows are checked.
+           */
 
-function escapeHtml(value){
+          function findHeaderRow(rows){
 
-    return String(value || "")
-        .replace(/&/g,"&amp;")
-        .replace(/</g,"&lt;")
-        .replace(/>/g,"&gt;")
-        .replace(/"/g,"&quot;")
-        .replace(/'/g,"&#039;");
-}
+              let bestIndex=-1;
+              let bestScore=0;
 
 
-function escapeAttr(value){
+              const max =
+                  Math.min(
+                      rows.length,
+                      20
+                  );
 
-    return String(value || "")
-        .replace(/\\/g,"\\\\")
-        .replace(/'/g,"\\'");
-}
 
+              for(
+                  let r=0;
+                  r<max;
+                  r++
+              ){
 
-/* -----------------------------
-   باز کردن Excel
------------------------------ */
+                  const row =
+                      rows[r] || [];
 
 
-function openExcel(){
+                  let score=0;
 
-    const input =
-        document.getElementById(
-            "excel"
-        );
 
-    input.value = "";
+                  const normalized =
+                      row.map(
+                          normalizeText
+                      );
 
-    input.click();
-}
 
+                  Object.keys(ALIASES)
+                      .forEach(
+                          function(key){
 
-/* -----------------------------
-   نرمال‌سازی فارسی
------------------------------ */
+                              const aliases =
+                                  ALIASES[key]
+                                  .map(
+                                      normalizeText
+                                  );
 
 
-function normalizeText(value){
+                              if(
+                                  normalized.some(
+                                      function(h){
+                                          return aliases.includes(h);
+                                      }
+                                  )
+                              ){
+                                  score++;
+                              }
 
-    return String(value ?? "")
+                          }
+                      );
 
-        .trim()
 
-        .replace(/\u200c/g,"")
+                  if(score>bestScore){
 
-        .replace(/\s+/g,"")
+                      bestScore=score;
 
-        .replace(/ي/g,"ی")
+                      bestIndex=r;
+                  }
+              }
 
-        .replace(/ى/g,"ی")
 
-        .replace(/ك/g,"ک")
+              /*
+               * At least two recognizable
+               * customer columns required.
+               */
 
-        .replace(
-            /[۰-۹]/g,
-            function(d){
+              if(bestScore>=2){
+                  return bestIndex;
+              }
 
-                return
-                    "۰۱۲۳۴۵۶۷۸۹"
-                    .indexOf(d);
-            }
-        )
 
-        .toLowerCase();
-}
+              return -1;
+          }
 
 
-/* -----------------------------
-   پیدا کردن ستون
------------------------------ */
+          /*
+           * =====================================================
+           * CONVERT EXCEL ROW
+           * =====================================================
+           */
 
+          function convertExcelRow(
+              row,
+              headers
+          ){
 
-const aliases = {
+              function get(key){
 
-    name: [
+                  const col =
+                      findColumn(
+                          headers,
+                          ALIASES[key]
+                      );
 
-        "نام و نام خانوادگی",
-        "نام مشتری",
-        "نام",
-        "مشتری"
+                  if(col<0)
+                      return "";
 
-    ],
+                  return cellValue(
+                      row[col]
+                  );
+              }
 
-    phone: [
 
-        "شماره تماس",
-        "شماره تلفن",
-        "تلفن",
-        "موبایل",
-        "شماره"
+              return {
 
-    ],
+                  name:get("name"),
 
-    address: [
+                  phone:get("phone"),
 
-        "آدرس",
-        "نشانی"
+                  address:get("address"),
 
-    ],
+                  device:get("device"),
 
-    device: [
+                  install:get("install"),
 
-        "نوع دستگاه",
-        "دستگاه",
-        "مدل دستگاه",
-        "مدل"
+                  filter:get("filter"),
 
-    ],
+                  f56:get("f56"),
 
-    install: [
+                  next:get("next"),
 
-        "تاریخ نصب"
+                  membrane:get("membrane"),
 
-    ],
+                  notes:get("notes"),
 
-    filter: [
+                  debt:get("debt"),
 
-        "تعویض فیلتر",
-        "آخرین تعویض فیلتر"
+                  imported:true
+              };
+          }
 
-    ],
 
-    f56: [
+          function isCustomerRow(customer){
 
-        "فیلتر 5و6",
-        "فیلتر ۵و۶",
-        "فیلتر ۵ و ۶",
-        "فیلتر5و6"
+              return Boolean(
+                  customer.name ||
+                  customer.phone ||
+                  customer.address ||
+                  customer.device
+              );
+          }
 
-    ],
 
-    next: [
+          /*
+           * =====================================================
+           * SCORE SHEET
+           * =====================================================
+           */
 
-        "تاریخ بعدی",
-        "موعد سرویس بعدی",
-        "سرویس بعدی"
+          function scoreSheet(
+              sheetName,
+              rows
+          ){
 
-    ],
+              if(
+                  !rows ||
+                  !rows.length
+              ){
+                  return {
+                      score:0,
+                      headerIndex:-1
+                  };
+              }
 
-    membrane: [
 
-        "ممبران"
+              const headerIndex =
+                  findHeaderRow(rows);
 
-    ],
 
-    notes: [
+              if(headerIndex<0){
 
-        "ملاحظات",
-        "ملاحضات",
-        "توضیحات",
-        "یادداشت"
+                  return {
+                      score:0,
+                      headerIndex:-1
+                  };
+              }
 
-    ],
 
-    debt: [
+              const headers =
+                  rows[headerIndex] || [];
 
-        "بدهکاری",
-        "بدهی"
 
-    ]
+              let score=0;
 
-};
 
+              const normalizedName =
+                  normalizeText(
+                      sheetName
+                  );
 
-function findColumn(
-    headers,
-    possibleNames
-){
 
-    const wanted =
-        possibleNames.map(
-            normalizeText
-        );
+              /*
+               * Prefer the actual customer sheets
+               * from the user's workbook.
+               */
 
+              if(
+                  normalizedName ===
+                  normalizeText("مشتري")
+              ){
+                  score+=100;
+              }
 
-    for(
-        let i=0;
-        i<headers.length;
-        i++
-    ){
 
-        const h =
-            normalizeText(
-                headers[i]
-            );
+              if(
+                  normalizedName ===
+                  normalizeText("هاکان نوین")
+              ){
+                  score+=90;
+              }
 
 
-        if(
-            wanted.includes(h)
-        ){
+              /*
+               * Count recognized columns.
+               */
 
-            return i;
-        }
-    }
+              Object.keys(ALIASES)
+                  .forEach(
+                      function(key){
 
+                          if(
+                              findColumn(
+                                  headers,
+                                  ALIASES[key]
+                              )>=0
+                          ){
+                              score+=5;
+                          }
 
-    return -1;
-}
+                      }
+                  );
 
 
-/* -----------------------------
-   پیدا کردن ردیف Header
------------------------------ */
+              /*
+               * More populated rows = slightly
+               * stronger candidate.
+               */
 
+              let populated=0;
 
-function findHeaderRow(rows){
 
-    let bestIndex = -1;
+              for(
+                  let i=headerIndex+1;
+                  i<rows.length;
+                  i++
+              ){
 
-    let bestScore = 0;
+                  const row =
+                      rows[i] || [];
 
 
-    const max =
-        Math.min(
-            rows.length,
-            20
-        );
+                  if(
+                      row.some(
+                          function(x){
+                              return String(
+                                  x ?? ""
+                              ).trim() !== "";
+                          }
+                      )
+                  ){
+                      populated++;
+                  }
 
+              }
 
-    for(
-        let r=0;
-        r<max;
-        r++
-    ){
 
-        const row =
-            rows[r] || [];
+              score +=
+                  Math.min(
+                      populated,
+                      20
+                  );
 
 
-        let score = 0;
+              return {
+                  score:score,
+                  headerIndex:headerIndex
+              };
+          }
 
 
-        for(
-            const key in aliases
-        ){
+          /*
+           * =====================================================
+           * IMPORT EXCEL
+           * =====================================================
+           */
 
-            if(
-                findColumn(
-                    row,
-                    aliases[key]
-                ) >= 0
-            ){
+          function importExcelFile(file){
 
-                score++;
-            }
-        }
+              if(!file){
 
+                  alert(
+                      "فایلی انتخاب نشده است."
+                  );
 
-        if(score > bestScore){
+                  return;
+              }
 
-            bestScore = score;
 
-            bestIndex = r;
-        }
-    }
+              showMessage(
+                  "⏳ در حال خواندن فایل Excel..."
+              );
 
 
-    if(bestScore >= 2){
+              const reader =
+                  new FileReader();
 
-        return bestIndex;
-    }
 
+              reader.onload =
+                  function(event){
 
-    return -1;
-}
+                      try{
 
+                          const data =
+                              new Uint8Array(
+                                  event.target.result
+                              );
 
-/* -----------------------------
-   تشخیص شیت مشتری
------------------------------ */
 
+                          const workbook =
+                              XLSX.read(
+                                  data,
+                                  {
+                                      type:"array",
+                                      cellDates:false,
+                                      raw:false
+                                  }
+                              );
 
-function scoreSheet(
-    sheetName,
-    rows
-){
 
-    if(
-        !rows ||
-        !rows.length
-    ){
+                          if(
+                              !workbook.SheetNames ||
+                              !workbook.SheetNames.length
+                          ){
 
-        return {
-            score:0,
-            header:-1
-        };
-    }
+                              alert(
+                                  "هیچ شیتی در فایل پیدا نشد."
+                              );
 
+                              return;
+                          }
 
-    const header =
-        findHeaderRow(rows);
 
+                          /*
+                           * Find the best customer sheet.
+                           */
 
-    if(header < 0){
+                          let bestSheet=null;
 
-        return {
-            score:0,
-            header:-1
-        };
-    }
 
+                          workbook.SheetNames
+                              .forEach(
+                                  function(sheetName){
 
-    let score = 0;
+                                      const worksheet =
+                                          workbook.Sheets[
+                                              sheetName
+                                          ];
 
 
-    const sheet =
-        normalizeText(
-            sheetName
-        );
+                                      if(!worksheet)
+                                          return;
 
 
-    if(
-        sheet ===
-        normalizeText("مشتري")
-    ){
+                                      const rows =
+                                          XLSX.utils.sheet_to_json(
+                                              worksheet,
+                                              {
+                                                  header:1,
+                                                  defval:"",
+                                                  raw:false
+                                              }
+                                          );
 
-        score += 100;
-    }
 
+                                      const result =
+                                          scoreSheet(
+                                              sheetName,
+                                              rows
+                                          );
 
-    if(
-        sheet ===
-        normalizeText("هاکان نوین")
-    ){
 
-        score += 90;
-    }
+                                      if(
+                                          result.score>0 &&
+                                          (
+                                              bestSheet===null ||
+                                              result.score >
+                                              bestSheet.score
+                                          )
+                                      ){
 
+                                          bestSheet={
 
-    const headers =
-        rows[header] || [];
+                                              name:
+                                                  sheetName,
 
+                                              rows:
+                                                  rows,
 
-    for(
-        const key in aliases
-    ){
+                                              score:
+                                                  result.score,
 
-        if(
-            findColumn(
-                headers,
-                aliases[key]
-            ) >= 0
-        ){
+                                              headerIndex:
+                                                  result.headerIndex
 
-            score += 10;
-        }
-    }
+                                          };
+                                      }
 
+                                  }
+                              );
 
-    let dataRows = 0;
 
+                          if(!bestSheet){
 
-    for(
-        let i=header+1;
-        i<rows.length;
-        i++
-    ){
+                              alert(
+                                  "❌ هیچ شیت مشتری در فایل پیدا نشد.\n\n"+
+                                  "باید حداقل ستون‌هایی مثل «نام»، «شماره تماس» یا «آدرس» وجود داشته باشد."
+                              );
 
-        const row =
-            rows[i] || [];
+                              return;
+                          }
 
 
-        const hasData =
-            row.some(
-                function(v){
+                          const headers =
+                              bestSheet.rows[
+                                  bestSheet.headerIndex
+                              ];
 
-                    return String(
-                        v ?? ""
-                    ).trim() !== "";
-                }
-            );
 
+                          const imported=[];
 
-        if(hasData){
 
-            dataRows++;
-        }
-    }
+                          for(
+                              let i=
+                                  bestSheet.headerIndex+1;
+                              i<
+                                  bestSheet.rows.length;
+                              i++
+                          ){
 
+                              const row =
+                                  bestSheet.rows[i];
 
-    score +=
-        Math.min(
-            dataRows,
-            20
-        );
 
+                              if(!row)
+                                  continue;
 
-    return {
 
-        score:score,
+                              const customer =
+                                  convertExcelRow(
+                                      row,
+                                      headers
+                                  );
 
-        header:header
-    };
-}
 
+                              /*
+                               * Ignore completely blank rows.
+                               */
 
-/* -----------------------------
-   تبدیل ردیف
------------------------------ */
+                              if(
+                                  isCustomerRow(
+                                      customer
+                                  )
+                              ){
 
+                                  imported.push(
+                                      customer
+                                  );
+                              }
 
-function convertRow(
-    row,
-    headers
-){
+                          }
 
-    function get(
-        names
-    ){
 
-        const col =
-            findColumn(
-                headers,
-                names
-            );
+                          if(!imported.length){
 
+                              alert(
+                                  "شیت «"+
+                                  bestSheet.name+
+                                  "» پیدا شد، اما ردیف مشتری قابل خواندن نبود."
+                              );
 
-        if(col < 0){
+                              return;
+                          }
 
-            return "";
-        }
 
+                          /*
+                           * IMPORTANT:
+                           *
+                           * Existing customers are not deleted.
+                           * Source duplicates are preserved.
+                           */
 
-        const value =
-            row[col];
+                          const previousCount =
+                              customers.length;
 
 
-        if(
-            value === undefined ||
-            value === null
-        ){
+                          customers =
+                              customers.concat(
+                                  imported
+                              );
 
-            return "";
-        }
 
+                          saveCustomers();
 
-        return String(
-            value
-        ).trim();
-    }
+                          render();
 
 
-    let phone =
-        get(
-            aliases.phone
-        );
+                          alert(
 
+                              "✅ ورود Excel موفق بود\n\n"+
 
-    /*
-     * اگر Excel شماره را
-     * به صورت 9301234567 ذخیره کرده
-     * صفر ابتدای آن اضافه می‌شود.
-     */
+                              "📄 شیت انتخاب‌شده: "+
+                              bestSheet.name+
+                              "\n\n"+
 
-    phone =
-        normalizePhone(
-            phone
-        );
+                              "👤 مشتری واردشده: "+
+                              imported.length+
+                              "\n\n"+
 
+                              "📊 تعداد کل مشتریان: "+
+                              customers.length
 
-    return {
+                          );
 
-        name:
-            get(
-                aliases.name
-            ),
 
-        phone:
-            phone,
+                          showMessage(
+                              "✅ "+
 
-        address:
-            get(
-                aliases.address
-            ),
+                              imported.length+
 
-        device:
-            get(
-                aliases.device
-            ),
+                              " مشتری از Excel وارد شد."
+                          );
 
-        install:
-            get(
-                aliases.install
-            ),
 
-        filter:
-            get(
-                aliases.filter
-            ),
+                      }catch(error){
 
-        f56:
-            get(
-                aliases.f56
-            ),
+                          console.error(
+                              "Excel import error:",
+                              error
+                          );
 
-        next:
-            get(
-                aliases.next
-            ),
 
-        membrane:
-            get(
-                aliases.membrane
-            ),
+                          alert(
+                              "❌ خطا در خواندن Excel\n\n"+
+                              error.message
+                          );
+                      }
 
-        notes:
-            get(
-                aliases.notes
-            ),
+                  };
 
-        debt:
-            get(
-                aliases.debt
-            ),
 
-        imported:
-            true
+              reader.onerror =
+                  function(){
 
-    };
-}
+                      alert(
+                          "❌ برنامه نتوانست فایل را بخواند."
+                      );
 
+                  };
 
-/* -----------------------------
-   شماره تلفن
------------------------------ */
 
+              reader.readAsArrayBuffer(
+                  file
+              );
+          }
 
-function normalizePhone(phone){
 
-    phone =
-        String(phone || "")
-        .trim();
+          /*
+           * =====================================================
+           * EXPORT EXCEL
+           * =====================================================
+           */
 
+          function exportExcel(){
 
-    phone =
-        phone.replace(
-            /\s+/g,
-            ""
-        );
+              if(!customers.length){
 
+                  alert(
+                      "هیچ مشتری‌ای برای خروجی وجود ندارد."
+                  );
 
-    phone =
-        phone.replace(
-            /[۰-۹]/g,
-            function(d){
+                  return;
+              }
 
-                return
-                    "۰۱۲۳۴۵۶۷۸۹"
-                    .indexOf(d);
-            }
-        );
 
+              const rows =
+                  customers.map(
+                      function(c,index){
 
-    /*
-     * Excel گاهی شماره عددی را
-     * به صورت 9301234567.0 می‌دهد.
-     */
+                          return {
 
-    phone =
-        phone.replace(
-            /\.0$/,
-            ""
-        );
+                              "ردیف":
+                                  index+1,
 
+                              "نام و نام خانوادگی":
+                                  c.name || "",
 
-    if(
-        /^9\d{9}$/.test(phone)
-    ){
+                              "شماره تماس":
+                                  c.phone || "",
 
-        phone =
-            "0" + phone;
-    }
+                              "آدرس":
+                                  c.address || "",
 
+                              "نوع دستگاه":
+                                  c.device || "",
 
-    return phone;
-}
+                              "تاریخ نصب":
+                                  c.install || "",
 
+                              "آخرین تعویض فیلتر":
+                                  c.filter || "",
 
-/* -----------------------------
-   ورود Excel
------------------------------ */
+                              "فیلتر 5و6":
+                                  c.f56 || "",
 
+                              "تاریخ بعدی":
+                                  c.next || "",
 
-function importExcel(event){
+                              "ممبران":
+                                  c.membrane || "",
 
-    const file =
-        event.target.files[0];
+                              "ملاحظات":
+                                  c.notes || "",
 
+                              "بدهکاری":
+                                  c.debt || ""
+                          };
+                      }
+                  );
 
-    if(!file){
 
-        return;
-    }
+              const worksheet =
+                  XLSX.utils.json_to_sheet(
+                      rows
+                  );
 
 
-    showMessage(
-        "⏳ در حال خواندن فایل Excel..."
-    );
+              const workbook =
+                  XLSX.utils.book_new();
 
 
-    const reader =
-        new FileReader();
+              XLSX.utils.book_append_sheet(
+                  workbook,
+                  worksheet,
+                  "مشتریان"
+              );
 
 
-    reader.onload =
-        function(e){
+              XLSX.writeFile(
+                  workbook,
+                  "HakanNovin-Customers.xlsx"
+              );
 
-            try{
 
-                const data =
-                    new Uint8Array(
-                        e.target.result
-                    );
+              showMessage(
+                  "📤 فایل Excel ساخته شد."
+              );
+          }
 
 
-                const workbook =
-                    XLSX.read(
-                        data,
-                        {
-                            type:"array",
-                            cellDates:false
-                        }
-                    );
+          /*
+           * =====================================================
+           * CLEAR ALL
+           * =====================================================
+           */
 
+          function clearCustomers(){
 
-                if(
-                    !workbook.SheetNames ||
-                    !workbook.SheetNames.length
-                ){
+              if(!customers.length){
 
-                    alert(
-                        "فایل Excel هیچ شیتی ندارد."
-                    );
+                  alert(
+                      "لیست مشتریان خالی است."
+                  );
 
-                    return;
-                }
+                  return;
+              }
 
 
-                let best = null;
+              if(
+                  !confirm(
+                      "⚠️ همه مشتریان حذف شوند؟\n\nاین کار قابل برگشت نیست."
+                  )
+              ){
+                  return;
+              }
 
 
-                /*
-                 * تمام شیت‌ها بررسی می‌شوند.
-                 */
+              customers=[];
 
-                workbook.SheetNames.forEach(
-                    function(sheetName){
+              saveCustomers();
 
-                        const ws =
-                            workbook.Sheets[
-                                sheetName
-                            ];
+              render();
 
+              showMessage(
+                  "همه مشتریان حذف شدند."
+              );
+          }
 
-                        if(!ws){
 
-                            return;
-                        }
+          /*
+           * =====================================================
+           * START
+           * =====================================================
+           */
 
+          loadCustomers();
 
-                        const rows =
-                            XLSX.utils.sheet_to_json(
-                                ws,
-                                {
-                                    header:1,
-                                    defval:"",
-                                    raw:false
-                                }
-                            );
+          </script>
 
+          </body>
 
-                        const result =
-                            scoreSheet(
-                                sheetName,
-                                rows
-                            );
+          </html>
+          EOF
 
-
-                        if(
-                            result.score > 0 &&
-                            (
-                                best === null ||
-                                result.score >
-                                best.score
-                            )
-                        ){
-
-                            best = {
-
-                                sheet:
-                                    sheetName,
-
-                                rows:
-                                    rows,
-
-                                score:
-                                    result.score,
-
-                                header:
-                                    result.header
-                            };
-                        }
-
-                    }
-                );
-
-
-                if(!best){
-
-                    alert(
-                        "❌ هیچ شیت مشتری در فایل پیدا نشد.\n\n"+
-                        "باید حداقل ستون‌هایی مثل «نام»، «شماره تماس» یا «آدرس» وجود داشته باشد."
-                    );
-
-                    return;
-                }
-
-
-                const headers =
-                    best.rows[
-                        best.header
-                    ] || [];
-
-
-                const imported = [];
-
-
-                for(
-                    let r =
-                        best.header + 1;
-                    r < best.rows.length;
-                    r++
-                ){
-
-                    const row =
-                        best.rows[r];
-
-
-                    if(!row){
-
-                        continue;
-                    }
-
-
-                    const isBlank =
-                        row.every(
-                            function(v){
-
-                                return String(
-                                    v ?? ""
-                                ).trim() === "";
-                            }
-                        );
-
-
-                    if(isBlank){
-
-                        continue;
-                    }
-
-
-                    const customer =
-                        convertRow(
-                            row,
-                            headers
-                        );
-
-
-                    /*
-                     * اگر حداقل یکی از
-                     * اطلاعات اصلی وجود داشته باشد
-                     * ردیف مشتری محسوب می‌شود.
-                     */
-
-                    if(
-                        customer.name ||
-                        customer.phone ||
-                        customer.address ||
-                        customer.device
-                    ){
-
-                        imported.push(
-                            customer
-                        );
-                    }
-                }
-
-
-                if(!imported.length){
-
-                    alert(
-                        "شیت «"+
-                        best.sheet+
-                        "» پیدا شد ولی ردیف مشتری قابل خواندن نبود."
-                    );
-
-                    return;
-                }
-
-
-                /*
-                 * اطلاعات قبلی پاک نمی‌شود.
-                 * مشتریان جدید به لیست اضافه می‌شوند.
-                 */
-
-                const before =
-                    customers.length;
-
-
-                customers =
-                    customers.concat(
-                        imported
-                    );
-
-
-                saveCustomers();
-
-
-                alert(
-
-                    "✅ ورود Excel موفق بود\n\n" +
-
-                    "📄 شیت انتخاب‌شده: " +
-                    best.sheet +
-                    "\n\n" +
-
-                    "👥 مشتری واردشده: " +
-                    imported.length +
-                    "\n\n" +
-
-                    "👥 تعداد کل مشتریان: " +
-                    customers.length
-
-                );
-
-
-                showMessage(
-                    "✅ "+imported.length+
-                    " مشتری از Excel وارد شد."
-                );
-
-
-                event.target.value = "";
-
-
-            }catch(error){
-
-                console.error(error);
-
-
-                alert(
-                    "❌ خطا در خواندن Excel\n\n"+
-                    error.message
-                );
-
-            }
-
-        };
-
-
-    reader.onerror =
-        function(){
-
-            alert(
-                "❌ برنامه نتوانست فایل را بخواند."
-            );
-
-        };
-
-
-    reader.readAsArrayBuffer(
-        file
-    );
-}
-
-
-/* -----------------------------
-   خروجی Excel
------------------------------ */
-
-
-function exportExcel(){
-
-    if(!customers.length){
-
-        alert(
-            "هنوز مشتری‌ای برای خروجی وجود ندارد."
-        );
-
-        return;
-    }
-
-
-    const rows =
-        customers.map(
-            function(c,index){
-
-                return {
-
-                    "ردیف":
-                        index + 1,
-
-                    "نام و نام خانوادگی":
-                        c.name || "",
-
-                    "شماره تماس":
-                        c.phone || "",
-
-                    "آدرس":
-                        c.address || "",
-
-                    "نوع دستگاه":
-                        c.device || "",
-
-                    "تاریخ نصب":
-                        c.install || "",
-
-                    "آخرین تعویض فیلتر":
-                        c.filter || "",
-
-                    "فیلتر 5و6":
-                        c.f56 || "",
-
-                    "تاریخ بعدی":
-                        c.next || "",
-
-                    "ممبران":
-                        c.membrane || "",
-
-                    "ملاحظات":
-                        c.notes || "",
-
-                    "بدهکاری":
-                        c.debt || ""
-
-                };
-
-            }
-        );
-
-
-    const ws =
-        XLSX.utils.json_to_sheet(
-            rows
-        );
-
-
-    const wb =
-        XLSX.utils.book_new();
-
-
-    XLSX.utils.book_append_sheet(
-        wb,
-        ws,
-        "مشتریان"
-    );
-
-
-    XLSX.writeFile(
-        wb,
-        "HakanNovin-Customers.xlsx"
-    );
-}
-
-
-/* -----------------------------
-   حذف همه
------------------------------ */
-
-
-function clearCustomers(){
-
-    if(!customers.length){
-
-        alert(
-            "لیست مشتریان خالی است."
-        );
-
-        return;
-    }
-
-
-    if(
-        !confirm(
-            "⚠️ همه مشتریان حذف شوند؟\n\n"+
-            "این کار قابل برگشت نیست."
-        )
-    ){
-
-        return;
-    }
-
-
-    customers = [];
-
-
-    saveCustomers();
-
-
-    showMessage(
-        "همه مشتریان حذف شدند."
-    );
-}
-
-
-/* -----------------------------
-   شروع برنامه
------------------------------ */
-
-
-loadCustomers();
-
-
-</script>
-
-</body>
-
-</html>
-EOF
-
-      - name: Setup Gradle
+      # ---------------------------------------------------------
+      # Gradle
+      # ---------------------------------------------------------
+      - name: Install Gradle
         shell: bash
         run: |
 
@@ -2602,37 +2580,51 @@ EOF
 
           unzip -q gradle.zip
 
-          gradle-8.7/bin/gradle wrapper \
-            --gradle-version 8.7
+          ./gradle-8.7/bin/gradle --version
 
+      # ---------------------------------------------------------
+      # Build
+      # ---------------------------------------------------------
       - name: Build APK
         shell: bash
         run: |
 
-          chmod +x gradlew
-
-          ./gradlew assembleDebug \
+          ./gradle-8.7/bin/gradle \
+            assembleDebug \
             --no-daemon \
             --stacktrace
 
+      # ---------------------------------------------------------
+      # Check
+      # ---------------------------------------------------------
       - name: Check APK
         shell: bash
         run: |
 
           echo "APK files:"
 
-          find app/build/outputs \
+          find app/build/outputs/apk/debug \
             -type f \
-            -name "*.apk" \
+            -maxdepth 1 \
             -print
 
-          test \
-            -f \
+          test -f \
             app/build/outputs/apk/debug/app-debug.apk
 
+          ls -lh \
+            app/build/outputs/apk/debug/app-debug.apk
+
+      # ---------------------------------------------------------
+      # Upload APK
+      # ---------------------------------------------------------
       - name: Upload APK
         uses: actions/upload-artifact@v4
+
         with:
+
           name: HakanNovin-APK-v3.2
-          path: app/build/outputs/apk/debug/app-debug.apk
+
+          path:
+            app/build/outputs/apk/debug/app-debug.apk
+
           if-no-files-found: error
