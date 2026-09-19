@@ -703,8 +703,11 @@ jobs:
 
                       public void onTextChanged(
                                    - name: Upload APK
+
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: HakanNovin-APK
           path: hakan/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+                                   
