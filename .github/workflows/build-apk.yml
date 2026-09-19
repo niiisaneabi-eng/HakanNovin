@@ -1,15 +1,17 @@
-name: Build HakanNovin APK V3.1
+name: Build HakanNovin APK V3.2
 
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -17,1191 +19,2620 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: "17"
 
       - name: Create Android project
         shell: bash
         run: |
+
           mkdir -p app/src/main/java/com/hakannovin/app
           mkdir -p app/src/main/assets
-          mkdir -p app/src/main/res/mipmap-hdpi
           mkdir -p app/src/main/res/values
-          
+
           cat > settings.gradle <<'EOF'
-          pluginManagement {
-              repositories {
-                  google()
-                  mavenCentral()
-                  gradlePluginPortal()
-              }
-          }
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
 
-          dependencyResolutionManagement {
-              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-          }
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
 
-          rootProject.name = "HakanNovin"
-          include(":app")
-          EOF
+rootProject.name = "HakanNovin"
+include(":app")
+EOF
 
           cat > build.gradle <<'EOF'
-          plugins {
-              id 'com.android.application' version '8.5.2' apply false
-          }
-          EOF
+plugins {
+    id 'com.android.application' version '8.5.2' apply false
+}
+EOF
 
           cat > gradle.properties <<'EOF'
-          android.useAndroidX=true
-          android.nonTransitiveRClass=true
-          org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
-          EOF
+org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+android.useAndroidX=true
+android.nonTransitiveRClass=true
+EOF
 
           cat > app/build.gradle <<'EOF'
-          plugins {
-              id 'com.android.application'
-          }
+plugins {
+    id 'com.android.application'
+}
 
-          android {
-              namespace 'com.hakannovin.app'
-              compileSdk 35
+android {
+    namespace 'com.hakannovin.app'
+    compileSdk 35
 
-              defaultConfig {
-                  applicationId "com.hakannovin.app"
-                  minSdk 23
-                  targetSdk 35
-                  versionCode 31
-                  versionName "3.1"
-              }
-          }
-          EOF
+    defaultConfig {
+        applicationId "com.hakannovin.app"
+        minSdk 23
+        targetSdk 35
+        versionCode 32
+        versionName "3.2"
+    }
+}
+EOF
 
           cat > app/src/main/res/values/strings.xml <<'EOF'
-          <resources>
-              <string name="app_name">هاکان نوین</string>
-          </resources>
-          EOF
-
-          cat > app/src/main/AndroidManifest.xml <<'EOF'
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
-              <application
-                  android:allowBackup="true"
-                  android:label="@string/app_name"
-                  android:theme="@style/AppTheme"
-                  android:usesCleartextTraffic="true">
-
-                  <activity
-                      android:name=".MainActivity"
-                      android:screenOrientation="portrait"
-                      android:exported="true">
-
-                      <intent-filter>
-                          <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHER" />
-                      </intent-filter>
-
-                  </activity>
-              </application>
-
-          </manifest>
-          EOF
+<resources>
+    <string name="app_name">هاکان نوین</string>
+</resources>
+EOF
 
           cat > app/src/main/res/values/styles.xml <<'EOF'
-          <resources>
-              <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
-                  <item name="android:fontFamily">sans</item>
-                  <item name="android:windowLightStatusBar">false</item>
-                  <item name="android:statusBarColor">#087f8c</item>
-                  <item name="android:navigationBarColor">#ffffff</item>
-                  <item name="android:colorAccent">#087f8c</item>
-              </style>
-          </resources>
-          EOF
+<resources>
+
+    <style name="AppTheme"
+        parent="android:style/Theme.Material.Light.NoActionBar">
+
+        <item name="android:fontFamily">sans</item>
+        <item name="android:colorAccent">#087F8C</item>
+        <item name="android:statusBarColor">#066C76</item>
+        <item name="android:navigationBarColor">#FFFFFF</item>
+        <item name="android:windowLightStatusBar">false</item>
+
+    </style>
+
+</resources>
+EOF
+
+          cat > app/src/main/AndroidManifest.xml <<'EOF'
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application
+        android:allowBackup="true"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true">
+
+        <activity
+            android:name=".MainActivity"
+            android:screenOrientation="portrait"
+            android:exported="true">
+
+            <intent-filter>
+
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+
+            </intent-filter>
+
+        </activity>
+
+    </application>
+
+</manifest>
+EOF
 
       - name: Download SheetJS
         shell: bash
         run: |
-          curl -L \
+
+          curl -L --fail \
             https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js \
             -o app/src/main/assets/xlsx.full.min.js
 
       - name: Create MainActivity
         shell: bash
         run: |
+
           cat > app/src/main/java/com/hakannovin/app/MainActivity.java <<'EOF'
-          package com.hakannovin.app;
+package com.hakannovin.app;
 
-          import android.app.Activity;
-          import android.os.Bundle;
-          import android.webkit.WebSettings;
-          import android.webkit.WebView;
-          import android.webkit.WebViewClient;
+import android.app.Activity;
+import android.os.Bundle;
+import android.webkit.WebChromeClient;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.webkit.ValueCallback;
+import android.content.Intent;
+import android.net.Uri;
 
-          public class MainActivity extends Activity {
+public class MainActivity extends Activity {
 
-              @Override
-              protected void onCreate(Bundle savedInstanceState) {
-                  super.onCreate(savedInstanceState);
+    private WebView webView;
 
-                  WebView web = new WebView(this);
+    private ValueCallback<Uri[]> filePathCallback;
 
-                  WebSettings settings = web.getSettings();
-                  settings.setJavaScriptEnabled(true);
-                  settings.setDomStorageEnabled(true);
-                  settings.setAllowFileAccess(true);
-                  settings.setAllowContentAccess(true);
+    private static final int FILE_CHOOSER_REQUEST = 1001;
 
-                  web.setWebViewClient(new WebViewClient());
-                  web.loadUrl("file:///android_asset/index.html");
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
 
-                  setContentView(web);
-              }
-          }
-          EOF
+        super.onCreate(savedInstanceState);
 
-      - name: Create HakanNovin app
-        shell: bash
-        run: |
-          cat > app/src/main/assets/index.html <<'EOF'
-          <!DOCTYPE html>
-          <html lang="fa" dir="rtl">
-          <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width,initial-scale=1">
+        webView = new WebView(this);
 
-          <title>هاکان نوین</title>
+        WebSettings settings = webView.getSettings();
 
-          <script src="xlsx.full.min.js"></script>
+        settings.setJavaScriptEnabled(true);
 
-          <style>
-          *{
-            box-sizing:border-box;
-            font-family:Tahoma,Arial,sans-serif;
-          }
+        settings.setDomStorageEnabled(true);
 
-          body{
-            margin:0;
-            background:#f4f8f9;
-            color:#18343a;
-          }
+        settings.setAllowFileAccess(true);
 
-          header{
-            background:linear-gradient(135deg,#087f8c,#12a6a0);
-            color:white;
-            padding:22px 18px;
-            border-radius:0 0 25px 25px;
-            box-shadow:0 4px 15px #0002;
-          }
+        settings.setAllowContentAccess(true);
 
-          header h1{
-            margin:0;
-            font-size:25px;
-          }
+        settings.setBuiltInZoomControls(false);
 
-          header p{
-            margin:7px 0 0;
-            opacity:.9;
-          }
+        settings.setDisplayZoomControls(false);
 
-          .container{
-            padding:15px;
-            max-width:800px;
-            margin:auto;
-          }
+        webView.setWebViewClient(new WebViewClient());
 
-          .stats{
-            display:grid;
-            grid-template-columns:repeat(2,1fr);
-            gap:10px;
-            margin-top:-5px;
-          }
+        webView.setWebChromeClient(new WebChromeClient() {
 
-          .stat{
-            background:white;
-            padding:16px;
-            border-radius:17px;
-            box-shadow:0 2px 10px #00000010;
-          }
+            @Override
+            public boolean onShowFileChooser(
+                    WebView view,
+                    ValueCallback<Uri[]> callback,
+                    FileChooserParams params) {
 
-          .stat b{
-            display:block;
-            font-size:24px;
-            color:#087f8c;
-            margin-bottom:4px;
-          }
+                if (filePathCallback != null) {
 
-          button{
-            border:0;
-            border-radius:13px;
-            padding:13px 16px;
-            font-size:15px;
-            cursor:pointer;
-          }
+                    filePathCallback.onReceiveValue(null);
 
-          .primary{
-            background:#087f8c;
-            color:white;
-          }
+                }
 
-          .secondary{
-            background:#e2f3f4;
-            color:#087f8c;
-          }
+                filePathCallback = callback;
 
-          .danger{
-            background:#ffe5e5;
-            color:#b00020;
-          }
+                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
 
-          .toolbar{
-            display:grid;
-            grid-template-columns:1fr 1fr;
-            gap:10px;
-            margin:15px 0;
-          }
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
 
-          input,select,textarea{
-            width:100%;
-            border:1px solid #d6e1e3;
-            border-radius:12px;
-            padding:13px;
-            font-size:15px;
-            background:white;
-          }
+                intent.setType("*/*");
 
-          textarea{
-            min-height:90px;
-            resize:vertical;
-          }
-
-          .search{
-            margin-bottom:10px;
-          }
-
-          .customer{
-            background:white;
-            border-radius:16px;
-            padding:15px;
-            margin:9px 0;
-            box-shadow:0 2px 9px #0000000d;
-          }
-
-          .customer b{
-            font-size:17px;
-          }
-
-          .muted{
-            color:#718488;
-            font-size:13px;
-            margin-top:5px;
-          }
-
-          .actions{
-            display:flex;
-            gap:7px;
-            margin-top:10px;
-            flex-wrap:wrap;
-          }
-
-          .modal{
-            display:none;
-            position:fixed;
-            inset:0;
-            background:#0008;
-            z-index:10;
-            padding:15px;
-            overflow:auto;
-          }
-
-          .modalBox{
-            background:#fff;
-            max-width:700px;
-            margin:25px auto;
-            border-radius:20px;
-            padding:18px;
-          }
-
-          .modalBox h2{
-            margin-top:0;
-          }
-
-          .field{
-            margin:10px 0;
-          }
-
-          .field label{
-            display:block;
-            margin-bottom:5px;
-            font-size:13px;
-            color:#607477;
-          }
-
-          .empty{
-            text-align:center;
-            background:white;
-            padding:35px 15px;
-            border-radius:17px;
-            color:#718488;
-          }
-
-          .success{
-            background:#e6f8ed;
-            color:#157347;
-            padding:12px;
-            border-radius:12px;
-            margin:10px 0;
-            display:none;
-          }
-
-          .warning{
-            background:#fff5dc;
-            color:#875f00;
-            padding:12px;
-            border-radius:12px;
-            margin:10px 0;
-          }
-          </style>
-          </head>
-
-          <body>
-
-          <header>
-            <h1>💧 هاکان نوین</h1>
-            <p>مدیریت مشتریان و سرویس تصفیه آب</p>
-          </header>
-
-          <div class="container">
-
-            <div class="stats">
-              <div class="stat">
-                <b id="total">0</b>
-                مشتری
-              </div>
-
-              <div class="stat">
-                <b id="phones">0</b>
-                دارای شماره
-              </div>
-            </div>
-
-            <div id="message" class="success"></div>
-
-            <div class="toolbar">
-              <button class="primary" onclick="openAdd()">➕ مشتری جدید</button>
-
-              <button class="secondary" onclick="document.getElementById('excel').click()">
-                📥 ورود اکسل
-              </button>
-
-              <input
-                id="excel"
-                type="file"
-                accept=".xlsx,.xls,.csv"
-                style="display:none"
-                onchange="importExcel(event)"
-              />
-
-              <button class="secondary" onclick="exportExcel()">
-                📤 خروجی اکسل
-              </button>
-
-              <button class="danger" onclick="clearCustomers()">
-                🗑 حذف همه مشتریان
-              </button>
-            </div>
-
-            <input
-              id="search"
-              class="search"
-              placeholder="🔎 جستجوی نام، شماره، آدرس یا دستگاه..."
-              oninput="render()"
-            />
-
-            <div id="list"></div>
-
-          </div>
-
-
-          <div id="modal" class="modal">
-
-            <div class="modalBox">
-
-              <h2 id="modalTitle">مشتری جدید</h2>
-
-              <div class="field">
-                <label>نام و نام خانوادگی</label>
-                <input id="f_name">
-              </div>
-
-              <div class="field">
-                <label>شماره تماس</label>
-                <input id="f_phone" inputmode="tel">
-              </div>
-
-              <div class="field">
-                <label>آدرس</label>
-                <textarea id="f_address"></textarea>
-              </div>
-
-              <div class="field">
-                <label>نوع دستگاه</label>
-                <input id="f_device">
-              </div>
-
-              <div class="field">
-                <label>تاریخ نصب</label>
-                <input id="f_install" placeholder="مثلاً 1404/02/15">
-              </div>
-
-              <div class="field">
-                <label>آخرین تعویض فیلتر</label>
-                <input id="f_filter" placeholder="مثلاً 1404/08/15">
-              </div>
-
-              <div class="field">
-                <label>تاریخ بعدی</label>
-                <input id="f_next" placeholder="مثلاً 1405/02/15">
-              </div>
-
-              <div class="field">
-                <label>فیلتر ۵ و ۶</label>
-                <input id="f_f56">
-              </div>
-
-              <div class="field">
-                <label>ممبران</label>
-                <input id="f_membrane">
-              </div>
-
-              <div class="field">
-                <label>ملاحظات</label>
-                <textarea id="f_notes"></textarea>
-              </div>
-
-              <div class="field">
-                <label>بدهکاری</label>
-                <input id="f_debt">
-              </div>
-
-              <div class="actions">
-                <button class="primary" onclick="saveCustomer()">ذخیره</button>
-                <button class="secondary" onclick="closeModal()">انصراف</button>
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <script>
-
-          let customers = [];
-
-          let editIndex = -1;
-
-
-          function load(){
-
-            try{
-              customers = JSON.parse(
-                localStorage.getItem("hakan_novin_customers") || "[]"
-              );
-
-              if(!Array.isArray(customers))
-                customers=[];
-
-            }catch(e){
-              customers=[];
-            }
-
-            render();
-          }
-
-
-          function save(){
-
-            localStorage.setItem(
-              "hakan_novin_customers",
-              JSON.stringify(customers)
-            );
-
-            render();
-          }
-
-
-          function showMessage(text){
-
-            const box=document.getElementById("message");
-
-            box.textContent=text;
-            box.style.display="block";
-
-            setTimeout(()=>{
-              box.style.display="none";
-            },4000);
-          }
-
-
-          function openAdd(){
-
-            editIndex=-1;
-
-            document.getElementById("modalTitle").textContent="مشتری جدید";
-
-            [
-              "f_name",
-              "f_phone",
-              "f_address",
-              "f_device",
-              "f_install",
-              "f_filter",
-              "f_next",
-              "f_f56",
-              "f_membrane",
-              "f_notes",
-              "f_debt"
-            ].forEach(id=>{
-              document.getElementById(id).value="";
-            });
-
-            document.getElementById("modal").style.display="block";
-          }
-
-
-          function closeModal(){
-
-            document.getElementById("modal").style.display="none";
-          }
-
-
-          function saveCustomer(){
-
-            const c={
-              name:document.getElementById("f_name").value.trim(),
-              phone:document.getElementById("f_phone").value.trim(),
-              address:document.getElementById("f_address").value.trim(),
-              device:document.getElementById("f_device").value.trim(),
-              install:document.getElementById("f_install").value.trim(),
-              filter:document.getElementById("f_filter").value.trim(),
-              next:document.getElementById("f_next").value.trim(),
-              f56:document.getElementById("f_f56").value.trim(),
-              membrane:document.getElementById("f_membrane").value.trim(),
-              notes:document.getElementById("f_notes").value.trim(),
-              debt:document.getElementById("f_debt").value.trim()
-            };
-
-            if(!c.name && !c.phone){
-              alert("حداقل نام یا شماره تماس را وارد کن.");
-              return;
-            }
-
-            if(editIndex>=0){
-              customers[editIndex]={
-                ...customers[editIndex],
-                ...c
-              };
-            }else{
-              customers.push(c);
-            }
-
-            save();
-            closeModal();
-
-            showMessage(
-              editIndex>=0
-              ? "اطلاعات مشتری ویرایش شد."
-              : "مشتری با موفقیت اضافه شد."
-            );
-          }
-
-
-          function editCustomer(i){
-
-            const c=customers[i];
-
-            editIndex=i;
-
-            document.getElementById("modalTitle").textContent="ویرایش مشتری";
-
-            document.getElementById("f_name").value=c.name||"";
-            document.getElementById("f_phone").value=c.phone||"";
-            document.getElementById("f_address").value=c.address||"";
-            document.getElementById("f_device").value=c.device||"";
-            document.getElementById("f_install").value=c.install||"";
-            document.getElementById("f_filter").value=c.filter||"";
-            document.getElementById("f_next").value=c.next||"";
-            document.getElementById("f_f56").value=c.f56||"";
-            document.getElementById("f_membrane").value=c.membrane||"";
-            document.getElementById("f_notes").value=c.notes||"";
-            document.getElementById("f_debt").value=c.debt||"";
-
-            document.getElementById("modal").style.display="block";
-          }
-
-
-          function deleteCustomer(i){
-
-            if(!confirm("این مشتری حذف شود؟"))
-              return;
-
-            customers.splice(i,1);
-            save();
-
-            showMessage("مشتری حذف شد.");
-          }
-
-
-          function render(){
-
-            document.getElementById("total").textContent=customers.length;
-
-            document.getElementById("phones").textContent=
-              customers.filter(c=>c.phone).length;
-
-            const q=
-              document.getElementById("search").value
-              .trim()
-              .toLowerCase();
-
-            const list=document.getElementById("list");
-
-            const filtered=customers.filter(c=>{
-
-              const text=[
-                c.name,
-                c.phone,
-                c.address,
-                c.device,
-                c.notes
-              ].join(" ").toLowerCase();
-
-              return !q || text.includes(q);
-            });
-
-            if(!filtered.length){
-
-              list.innerHTML=
-                '<div class="empty">هنوز مشتری‌ای ثبت نشده است.</div>';
-
-              return;
-            }
-
-            list.innerHTML=filtered.map(c=>{
-
-              const i=customers.indexOf(c);
-
-              return `
-                <div class="customer">
-
-                  <b>${escapeHtml(c.name||"بدون نام")}</b>
-
-                  <div class="muted">
-                    📞 ${escapeHtml(c.phone||"بدون شماره")}
-                  </div>
-
-                  <div class="muted">
-                    📍 ${escapeHtml(c.address||"بدون آدرس")}
-                  </div>
-
-                  <div class="muted">
-                    💧 ${escapeHtml(c.device||"نوع دستگاه ثبت نشده")}
-                  </div>
-
-                  <div class="actions">
-
-                    ${
-                      c.phone
-                      ?
-                      `<button class="secondary"
-                        onclick="callCustomer('${escapeAttr(c.phone)}')">
-                        📞 تماس
-                      </button>`
-                      :
-                      ""
-                    }
-
-                    <button class="secondary"
-                      onclick="editCustomer(${i})">
-                      ✏️ ویرایش
-                    </button>
-
-                    <button class="danger"
-                      onclick="deleteCustomer(${i})">
-                      حذف
-                    </button>
-
-                  </div>
-
-                </div>
-              `;
-
-            }).join("");
-          }
-
-
-          function escapeHtml(v){
-
-            return String(v||"")
-              .replace(/&/g,"&amp;")
-              .replace(/</g,"&lt;")
-              .replace(/>/g,"&gt;")
-              .replace(/"/g,"&quot;")
-              .replace(/'/g,"&#039;");
-          }
-
-
-          function escapeAttr(v){
-
-            return String(v||"").replace(/'/g,"\\'");
-          }
-
-
-          function callCustomer(phone){
-
-            window.location.href="tel:"+phone;
-          }
-
-
-          /*
-           * مهم‌ترین اصلاح V3.1:
-           * دیگر فقط Sheet[0] خوانده نمی‌شود.
-           * تمام شیت‌ها بررسی می‌شوند و اولین شیت دارای
-           * اطلاعات واقعی مشتری انتخاب می‌شود.
-           */
-
-          function normalizeHeader(v){
-
-            return String(v??"")
-              .trim()
-              .replace(/\u200c/g,"")
-              .replace(/\s+/g,"")
-              .replace(/[يى]/g,"ی")
-              .replace(/ك/g,"ک")
-              .replace(/[۰-۹]/g,d=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d));
-          }
-
-
-          function findColumn(headers,names){
-
-            const wanted=names.map(normalizeHeader);
-
-            for(let i=0;i<headers.length;i++){
-
-              const h=normalizeHeader(headers[i]);
-
-              if(wanted.includes(h))
-                return i;
-            }
-
-            return -1;
-          }
-
-
-          function convertRow(row,headers){
-
-            const nameCol=findColumn(
-              headers,
-              [
-                "نام و نام خانوادگی",
-                "نام مشتری",
-                "نام",
-                "مشتری"
-              ]
-            );
-
-            const phoneCol=findColumn(
-              headers,
-              [
-                "شماره تماس",
-                "شماره تلفن",
-                "تلفن",
-                "موبایل",
-                "شماره"
-              ]
-            );
-
-            const addressCol=findColumn(
-              headers,
-              [
-                "آدرس",
-                "نشانی"
-              ]
-            );
-
-            const deviceCol=findColumn(
-              headers,
-              [
-                "نوع دستگاه",
-                "دستگاه",
-                "مدل دستگاه"
-              ]
-            );
-
-            const installCol=findColumn(
-              headers,
-              [
-                "تاریخ نصب",
-                "تاریخنصب"
-              ]
-            );
-
-            const filterCol=findColumn(
-              headers,
-              [
-                "تعویض فیلتر",
-                "آخرین تعویض فیلتر",
-                "تعویضفیلتر"
-              ]
-            );
-
-            const f56Col=findColumn(
-              headers,
-              [
-                "فیلتر 5و6",
-                "فیلتر ۵ و ۶",
-                "فیلتر ۵و۶",
-                "فیلتر5و6"
-              ]
-            );
-
-            const nextCol=findColumn(
-              headers,
-              [
-                "تاریخ بعدی",
-                "موعد سرویس بعدی",
-                "سرویس بعدی"
-              ]
-            );
-
-            const membraneCol=findColumn(
-              headers,
-              [
-                "ممبران",
-                "membrane"
-              ]
-            );
-
-            const notesCol=findColumn(
-              headers,
-              [
-                "ملاحظات",
-                "ملاحضات",
-                "توضیحات",
-                "یادداشت"
-              ]
-            );
-
-            const debtCol=findColumn(
-              headers,
-              [
-                "بدهکاری",
-                "بدهی"
-              ]
-            );
-
-            function value(col){
-
-              if(col<0)
-                return "";
-
-              return row[col]===undefined || row[col]===null
-                ? ""
-                : String(row[col]).trim();
-            }
-
-            return {
-
-              name:value(nameCol),
-
-              phone:value(phoneCol),
-
-              address:value(addressCol),
-
-              device:value(deviceCol),
-
-              install:value(installCol),
-
-              filter:value(filterCol),
-
-              f56:value(f56Col),
-
-              next:value(nextCol),
-
-              membrane:value(membraneCol),
-
-              notes:value(notesCol),
-
-              debt:value(debtCol),
-
-              imported:true
-            };
-          }
-
-
-          function rowLooksLikeCustomer(c){
-
-            return Boolean(
-              c.name ||
-              c.phone ||
-              c.address ||
-              c.device ||
-              c.install ||
-              c.next
-            );
-          }
-
-
-          function sheetHasCustomerData(rows){
-
-            if(!rows || !rows.length)
-              return false;
-
-            const headers=rows[0]||[];
-
-            const normalized=headers.map(normalizeHeader);
-
-            const hasName=
-              normalized.includes(normalizeHeader("نام و نام خانوادگی")) ||
-              normalized.includes(normalizeHeader("نام مشتری")) ||
-              normalized.includes(normalizeHeader("نام"));
-
-            const hasPhone=
-              normalized.includes(normalizeHeader("شماره تماس")) ||
-              normalized.includes(normalizeHeader("تلفن")) ||
-              normalized.includes(normalizeHeader("شماره تلفن"));
-
-            const hasAddress=
-              normalized.includes(normalizeHeader("آدرس"));
-
-            return hasName || hasPhone || hasAddress;
-          }
-
-
-          function importExcel(event){
-
-            const file=event.target.files[0];
-
-            if(!file)
-              return;
-
-            const reader=new FileReader();
-
-            reader.onload=function(e){
-
-              try{
-
-                const data=new Uint8Array(e.target.result);
-
-                const workbook=XLSX.read(
-                  data,
-                  {
-                    type:"array",
-                    cellDates:false
-                  }
+                intent.putExtra(
+                        Intent.EXTRA_MIME_TYPES,
+                        new String[] {
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                "application/vnd.ms-excel",
+                                "text/csv",
+                                "application/csv",
+                                "text/comma-separated-values"
+                        }
                 );
 
-                if(!workbook.SheetNames.length){
+                try {
 
-                  alert("هیچ شیتی در فایل اکسل پیدا نشد.");
-                  return;
+                    startActivityForResult(
+                            Intent.createChooser(
+                                    intent,
+                                    "انتخاب فایل Excel"
+                            ),
+                            FILE_CHOOSER_REQUEST
+                    );
+
+                } catch (Exception e) {
+
+                    filePathCallback = null;
+
+                    return false;
                 }
 
-                let selectedRows=null;
-                let selectedSheet="";
+                return true;
+            }
+        });
+
+        webView.loadUrl("file:///android_asset/index.html");
+
+        setContentView(webView);
+    }
+
+    @Override
+    protected void onActivityResult(
+            int requestCode,
+            int resultCode,
+            Intent data) {
+
+        super.onActivityResult(
+                requestCode,
+                resultCode,
+                data
+        );
+
+        if (requestCode != FILE_CHOOSER_REQUEST) {
+
+            return;
+        }
+
+        if (filePathCallback == null) {
+
+            return;
+        }
+
+        Uri[] results = null;
+
+        if (resultCode == RESULT_OK && data != null) {
+
+            Uri uri = data.getData();
+
+            if (uri != null) {
+
+                results = new Uri[] {
+                        uri
+                };
+            }
+        }
+
+        filePathCallback.onReceiveValue(results);
+
+        filePathCallback = null;
+    }
+
+    @Override
+    public void onBackPressed() {
+
+        if (webView != null && webView.canGoBack()) {
+
+            webView.goBack();
+
+        } else {
+
+            super.onBackPressed();
+        }
+    }
+}
+EOF
+
+      - name: Create HakanNovin interface
+        shell: bash
+        run: |
+
+          cat > app/src/main/assets/index.html <<'EOF'
+<!DOCTYPE html>
+
+<html lang="fa" dir="rtl">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+/>
+
+<title>هاکان نوین</title>
+
+<script src="xlsx.full.min.js"></script>
+
+<style>
+
+*{
+    box-sizing:border-box;
+    font-family:
+        Tahoma,
+        Arial,
+        sans-serif;
+}
+
+body{
+    margin:0;
+    background:#f3f8f9;
+    color:#17363b;
+}
+
+header{
+    background:
+        linear-gradient(
+            135deg,
+            #066f7a,
+            #10a5a0
+        );
+
+    color:white;
+
+    padding:
+        22px
+        18px;
+
+    border-radius:
+        0
+        0
+        28px
+        28px;
+
+    box-shadow:
+        0 5px 18px
+        rgba(0,0,0,.15);
+}
+
+.logo{
+    width:58px;
+    height:58px;
+
+    border-radius:18px;
+
+    background:white;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:32px;
+
+    margin-bottom:10px;
+
+    box-shadow:
+        0 4px 12px
+        rgba(0,0,0,.15);
+}
+
+header h1{
+    margin:0;
+
+    font-size:25px;
+}
+
+header p{
+    margin:
+        7px
+        0
+        0;
+
+    opacity:.9;
+}
+
+.container{
+    max-width:850px;
+
+    margin:auto;
+
+    padding:15px;
+}
+
+.stats{
+    display:grid;
+
+    grid-template-columns:
+        repeat(2,1fr);
+
+    gap:10px;
+
+    margin-top:-3px;
+}
+
+.stat{
+    background:white;
+
+    padding:17px;
+
+    border-radius:18px;
+
+    box-shadow:
+        0 3px 12px
+        rgba(0,0,0,.07);
+}
+
+.stat b{
+    display:block;
+
+    font-size:25px;
+
+    color:#087f8c;
+
+    margin-bottom:5px;
+}
+
+.toolbar{
+    display:grid;
+
+    grid-template-columns:
+        1fr
+        1fr;
+
+    gap:9px;
+
+    margin:
+        15px
+        0
+        10px;
+}
+
+button{
+    border:0;
+
+    border-radius:13px;
+
+    padding:
+        13px
+        12px;
+
+    font-size:14px;
+
+    cursor:pointer;
+}
+
+.primary{
+    background:#087f8c;
+    color:white;
+}
+
+.secondary{
+    background:#dff3f4;
+    color:#08717a;
+}
+
+.danger{
+    background:#ffe4e4;
+    color:#b00020;
+}
+
+.search{
+    margin:
+        5px
+        0
+        10px;
+}
+
+input,
+textarea{
+    width:100%;
+
+    border:
+        1px solid
+        #d5e2e4;
+
+    border-radius:12px;
+
+    padding:13px;
+
+    font-size:15px;
+
+    background:white;
+
+    outline:none;
+}
+
+input:focus,
+textarea:focus{
+    border-color:#087f8c;
+}
+
+textarea{
+    min-height:85px;
+
+    resize:vertical;
+}
+
+.customer{
+    background:white;
+
+    border-radius:17px;
+
+    padding:15px;
+
+    margin:
+        9px
+        0;
+
+    box-shadow:
+        0 3px 12px
+        rgba(0,0,0,.06);
+}
+
+.customerName{
+    font-size:17px;
+
+    font-weight:bold;
+
+    margin-bottom:6px;
+}
+
+.info{
+    color:#667d81;
+
+    font-size:13px;
+
+    line-height:1.9;
+}
+
+.actions{
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:7px;
+
+    margin-top:10px;
+}
+
+.empty{
+    text-align:center;
+
+    background:white;
+
+    border-radius:17px;
+
+    padding:35px 15px;
+
+    color:#718488;
+}
+
+.message{
+    display:none;
+
+    padding:13px;
+
+    border-radius:13px;
+
+    margin:
+        10px
+        0;
+
+    background:#e3f7eb;
+
+    color:#13733f;
+}
+
+.warning{
+    background:#fff3d7;
+
+    color:#805e00;
+
+    padding:12px;
+
+    border-radius:13px;
+
+    margin:
+        10px
+        0;
+
+    font-size:13px;
+}
+
+.modal{
+    display:none;
+
+    position:fixed;
+
+    inset:0;
+
+    background:
+        rgba(0,0,0,.65);
+
+    z-index:100;
+
+    padding:15px;
+
+    overflow:auto;
+}
+
+.modalBox{
+    max-width:700px;
+
+    margin:
+        20px
+        auto;
+
+    background:white;
+
+    border-radius:22px;
+
+    padding:18px;
+}
+
+.modalBox h2{
+    margin-top:0;
+}
+
+.field{
+    margin:
+        10px
+        0;
+}
+
+.field label{
+    display:block;
+
+    color:#607477;
+
+    font-size:13px;
+
+    margin-bottom:5px;
+}
+
+.importBox{
+    background:white;
+
+    border-radius:17px;
+
+    padding:15px;
+
+    margin:
+        10px
+        0;
+
+    box-shadow:
+        0 3px 12px
+        rgba(0,0,0,.06);
+}
+
+.importTitle{
+    font-weight:bold;
+
+    margin-bottom:8px;
+}
+
+.small{
+    font-size:12px;
+
+    color:#718488;
+
+    line-height:1.8;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<header>
+
+    <div class="logo">
+        💧
+    </div>
+
+    <h1>
+        هاکان نوین
+    </h1>
+
+    <p>
+        مدیریت مشتریان و خدمات تصفیه آب
+    </p>
+
+</header>
+
+
+<div class="container">
+
+
+    <div class="stats">
+
+        <div class="stat">
+
+            <b id="total">
+                0
+            </b>
+
+            کل مشتریان
+
+        </div>
+
+
+        <div class="stat">
+
+            <b id="phones">
+                0
+            </b>
+
+            دارای شماره
+
+        </div>
+
+    </div>
+
+
+    <div
+        id="message"
+        class="message">
+    </div>
+
+
+    <div class="importBox">
+
+        <div class="importTitle">
+            📊 ورود مشتریان از Excel
+        </div>
+
+        <div class="small">
+
+            فایل Excel را انتخاب کن.
+            برنامه تمام شیت‌های فایل را بررسی می‌کند
+            و شیتی که اطلاعات مشتری داشته باشد را پیدا می‌کند.
+
+            <br>
+
+            شیت خالی مثل Sheet3 نادیده گرفته می‌شود.
+
+        </div>
+
+    </div>
+
+
+    <div class="toolbar">
+
+
+        <button
+            class="primary"
+            onclick="openAdd()">
+
+            ➕ مشتری جدید
+
+        </button>
+
+
+        <button
+            class="secondary"
+            onclick="openExcel()">
+
+            📥 ورود Excel
+
+        </button>
+
+
+        <button
+            class="secondary"
+            onclick="exportExcel()">
+
+            📤 خروجی Excel
+
+        </button>
+
+
+        <button
+            class="danger"
+            onclick="clearCustomers()">
+
+            🗑 حذف همه
+
+        </button>
+
+
+    </div>
+
+
+    <!--
+        این input عمداً مخفی است.
+        وقتی روی ورود Excel می‌زنیم،
+        Android File Picker باز می‌شود.
+    -->
+
+    <input
+        id="excel"
+        type="file"
+        accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
+        style="display:none"
+        onchange="importExcel(event)"
+    />
+
+
+    <input
+        id="search"
+        class="search"
+        placeholder="🔎 جستجوی نام، شماره، آدرس یا دستگاه..."
+        oninput="render()"
+    />
+
+
+    <div id="list">
+    </div>
+
+
+</div>
+
+
+
+<div
+    id="modal"
+    class="modal">
+
+
+    <div class="modalBox">
+
+
+        <h2 id="modalTitle">
+            مشتری جدید
+        </h2>
+
+
+        <div class="field">
+
+            <label>
+                نام و نام خانوادگی
+            </label>
+
+            <input id="f_name">
+
+        </div>
+
+
+        <div class="field">
+
+            <label>
+                شماره تماس
+            </label>
+
+            <input
+                id="f_phone"
+                inputmode="tel">
+
+        </div>
+
+
+        <div class="field">
+
+            <label>
+                آدرس
+            </label>
+
+            <textarea id="f_address"></textarea>
+
+        </div>
+
+
+        <div class="field">
+
+            <label>
+                نوع دستگاه
+            </label>
+
+            <input id="f_device">
+
+        </div>
+
+
+        <div class="field">
+
+            <label>
+                تاریخ نصب
+            </label>
+
+            <input
+                id="f_install"
+                placeholder="مثلاً 1404/02/15">
+
+        </div>
+
+
+        <div class="field">
+
+            <label>
+                آخرین تعویض فیلتر
+            </label>
+
+            <input
+                id="f_filter"
+                placeholder="مثلاً 1404/08/15">
+
+        </div>
+
+
+        <div class="field">
+
+            <label>
+                تاریخ بعدی سرویس
+            </label>
+
+            <input
+                id="f_next"
+                placeholder="مثلاً 1405/02/15">
+
+        </div>
+
+
+        <div class="field">
+
+            <label>
+                فیلتر ۵ و ۶
+            </label>
+
+            <input id="f_f56">
+
+        </div>
+
+
+        <div class="field">
+
+            <label>
+                ممبران
+            </label>
+
+            <input id="f_membrane">
+
+        </div>
+
+
+        <div class="field">
+
+            <label>
+                ملاحظات
+            </label>
+
+            <textarea id="f_notes"></textarea>
+
+        </div>
+
+
+        <div class="field">
+
+            <label>
+                بدهکاری
+            </label>
+
+            <input id="f_debt">
+
+        </div>
+
+
+        <div class="actions">
+
+
+            <button
+                class="primary"
+                onclick="saveCustomer()">
+
+                💾 ذخیره
+
+            </button>
+
+
+            <button
+                class="secondary"
+                onclick="closeModal()">
+
+                انصراف
+
+            </button>
+
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+
+<script>
+
+
+let customers = [];
+
+let editIndex = -1;
+
+
+/* -----------------------------
+   ذخیره و بارگذاری
+----------------------------- */
+
+
+function loadCustomers(){
+
+    try{
+
+        const data =
+            localStorage.getItem(
+                "hakan_novin_customers_v32"
+            );
+
+        customers =
+            data
+            ? JSON.parse(data)
+            : [];
+
+        if(!Array.isArray(customers)){
+
+            customers = [];
+
+        }
+
+    }catch(e){
+
+        customers = [];
+
+    }
+
+    render();
+}
+
+
+function saveCustomers(){
+
+    localStorage.setItem(
+        "hakan_novin_customers_v32",
+        JSON.stringify(customers)
+    );
+
+    render();
+}
+
+
+/* -----------------------------
+   پیام
+----------------------------- */
+
+
+function showMessage(text){
+
+    const box =
+        document.getElementById("message");
+
+    box.textContent = text;
+
+    box.style.display = "block";
+
+    setTimeout(function(){
+
+        box.style.display = "none";
+
+    },5000);
+}
+
+
+/* -----------------------------
+   مشتری جدید
+----------------------------- */
+
+
+function openAdd(){
+
+    editIndex = -1;
+
+    document.getElementById(
+        "modalTitle"
+    ).textContent = "مشتری جدید";
+
+
+    const ids = [
+
+        "f_name",
+        "f_phone",
+        "f_address",
+        "f_device",
+        "f_install",
+        "f_filter",
+        "f_next",
+        "f_f56",
+        "f_membrane",
+        "f_notes",
+        "f_debt"
+
+    ];
+
+
+    ids.forEach(function(id){
+
+        document.getElementById(id).value = "";
+
+    });
+
+
+    document.getElementById(
+        "modal"
+    ).style.display = "block";
+}
+
+
+function closeModal(){
+
+    document.getElementById(
+        "modal"
+    ).style.display = "none";
+}
+
+
+/* -----------------------------
+   ذخیره مشتری
+----------------------------- */
+
+
+function saveCustomer(){
+
+    const c = {
+
+        name:
+            document
+            .getElementById("f_name")
+            .value
+            .trim(),
+
+        phone:
+            document
+            .getElementById("f_phone")
+            .value
+            .trim(),
+
+        address:
+            document
+            .getElementById("f_address")
+            .value
+            .trim(),
+
+        device:
+            document
+            .getElementById("f_device")
+            .value
+            .trim(),
+
+        install:
+            document
+            .getElementById("f_install")
+            .value
+            .trim(),
+
+        filter:
+            document
+            .getElementById("f_filter")
+            .value
+            .trim(),
+
+        next:
+            document
+            .getElementById("f_next")
+            .value
+            .trim(),
+
+        f56:
+            document
+            .getElementById("f_f56")
+            .value
+            .trim(),
+
+        membrane:
+            document
+            .getElementById("f_membrane")
+            .value
+            .trim(),
+
+        notes:
+            document
+            .getElementById("f_notes")
+            .value
+            .trim(),
+
+        debt:
+            document
+            .getElementById("f_debt")
+            .value
+            .trim()
+
+    };
+
+
+    if(!c.name && !c.phone){
+
+        alert(
+            "حداقل نام یا شماره تماس را وارد کن."
+        );
+
+        return;
+    }
+
+
+    if(editIndex >= 0){
+
+        customers[editIndex] = {
+
+            ...customers[editIndex],
+
+            ...c
+
+        };
+
+    }else{
+
+        customers.push(c);
+
+    }
+
+
+    saveCustomers();
+
+    closeModal();
+
+    showMessage(
+        editIndex >= 0
+        ? "اطلاعات مشتری ویرایش شد."
+        : "مشتری با موفقیت اضافه شد."
+    );
+}
+
+
+/* -----------------------------
+   ویرایش
+----------------------------- */
+
+
+function editCustomer(index){
+
+    const c =
+        customers[index];
+
+    editIndex = index;
+
+
+    document.getElementById(
+        "modalTitle"
+    ).textContent = "ویرایش مشتری";
+
+
+    document.getElementById(
+        "f_name"
+    ).value = c.name || "";
+
+
+    document.getElementById(
+        "f_phone"
+    ).value = c.phone || "";
+
+
+    document.getElementById(
+        "f_address"
+    ).value = c.address || "";
+
+
+    document.getElementById(
+        "f_device"
+    ).value = c.device || "";
+
+
+    document.getElementById(
+        "f_install"
+    ).value = c.install || "";
+
+
+    document.getElementById(
+        "f_filter"
+    ).value = c.filter || "";
+
+
+    document.getElementById(
+        "f_next"
+    ).value = c.next || "";
+
+
+    document.getElementById(
+        "f_f56"
+    ).value = c.f56 || "";
+
+
+    document.getElementById(
+        "f_membrane"
+    ).value = c.membrane || "";
+
+
+    document.getElementById(
+        "f_notes"
+    ).value = c.notes || "";
+
+
+    document.getElementById(
+        "f_debt"
+    ).value = c.debt || "";
+
+
+    document.getElementById(
+        "modal"
+    ).style.display = "block";
+}
+
+
+/* -----------------------------
+   حذف
+----------------------------- */
+
+
+function deleteCustomer(index){
+
+    if(!confirm(
+        "این مشتری حذف شود؟"
+    )){
+
+        return;
+    }
+
+
+    customers.splice(
+        index,
+        1
+    );
+
+
+    saveCustomers();
+
+    showMessage(
+        "مشتری حذف شد."
+    );
+}
+
+
+/* -----------------------------
+   نمایش
+----------------------------- */
+
+
+function render(){
+
+    document.getElementById(
+        "total"
+    ).textContent =
+        customers.length;
+
+
+    document.getElementById(
+        "phones"
+    ).textContent =
+        customers.filter(
+            function(c){
+                return c.phone;
+            }
+        ).length;
+
+
+    const q =
+        document
+        .getElementById("search")
+        .value
+        .trim()
+        .toLowerCase();
+
+
+    const filtered =
+        customers.filter(
+            function(c){
+
+                const text = [
+
+                    c.name,
+                    c.phone,
+                    c.address,
+                    c.device,
+                    c.notes
+
+                ]
+                .join(" ")
+                .toLowerCase();
+
+
+                return !q ||
+                    text.includes(q);
+            }
+        );
+
+
+    const list =
+        document.getElementById(
+            "list"
+        );
+
+
+    if(!filtered.length){
+
+        list.innerHTML =
+            '<div class="empty">' +
+            'هنوز مشتری‌ای ثبت نشده است.' +
+            '</div>';
+
+        return;
+    }
+
+
+    list.innerHTML =
+        filtered
+        .map(
+            function(c){
+
+                const i =
+                    customers.indexOf(c);
+
+
+                return `
+
+                <div class="customer">
+
+                    <div class="customerName">
+
+                        ${escapeHtml(
+                            c.name ||
+                            "بدون نام"
+                        )}
+
+                    </div>
+
+
+                    <div class="info">
+
+                        📞
+                        ${escapeHtml(
+                            c.phone ||
+                            "بدون شماره"
+                        )}
+
+                        <br>
+
+                        📍
+                        ${escapeHtml(
+                            c.address ||
+                            "بدون آدرس"
+                        )}
+
+                        <br>
+
+                        💧
+                        ${escapeHtml(
+                            c.device ||
+                            "نوع دستگاه ثبت نشده"
+                        )}
+
+                        ${
+                            c.next
+                            ?
+                            `<br>
+                             📅 سرویس بعدی:
+                             ${escapeHtml(c.next)}`
+                            :
+                            ""
+                        }
+
+                    </div>
+
+
+                    <div class="actions">
+
+                        ${
+                            c.phone
+                            ?
+                            `
+                            <button
+                                class="secondary"
+                                onclick="callCustomer('${escapeAttr(c.phone)}')">
+
+                                📞 تماس
+
+                            </button>
+                            `
+                            :
+                            ""
+                        }
+
+
+                        <button
+                            class="secondary"
+                            onclick="editCustomer(${i})">
+
+                            ✏️ ویرایش
+
+                        </button>
+
+
+                        <button
+                            class="danger"
+                            onclick="deleteCustomer(${i})">
+
+                            حذف
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                `;
+
+            }
+        )
+        .join("");
+}
+
+
+/* -----------------------------
+   تماس
+----------------------------- */
+
+
+function callCustomer(phone){
+
+    window.location.href =
+        "tel:" + phone;
+}
+
+
+/* -----------------------------
+   امنیت نمایش متن
+----------------------------- */
+
+
+function escapeHtml(value){
+
+    return String(value || "")
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+}
+
+
+function escapeAttr(value){
+
+    return String(value || "")
+        .replace(/\\/g,"\\\\")
+        .replace(/'/g,"\\'");
+}
+
+
+/* -----------------------------
+   باز کردن Excel
+----------------------------- */
+
+
+function openExcel(){
+
+    const input =
+        document.getElementById(
+            "excel"
+        );
+
+    input.value = "";
+
+    input.click();
+}
+
+
+/* -----------------------------
+   نرمال‌سازی فارسی
+----------------------------- */
+
+
+function normalizeText(value){
+
+    return String(value ?? "")
+
+        .trim()
+
+        .replace(/\u200c/g,"")
+
+        .replace(/\s+/g,"")
+
+        .replace(/ي/g,"ی")
+
+        .replace(/ى/g,"ی")
+
+        .replace(/ك/g,"ک")
+
+        .replace(
+            /[۰-۹]/g,
+            function(d){
+
+                return
+                    "۰۱۲۳۴۵۶۷۸۹"
+                    .indexOf(d);
+            }
+        )
+
+        .toLowerCase();
+}
+
+
+/* -----------------------------
+   پیدا کردن ستون
+----------------------------- */
+
+
+const aliases = {
+
+    name: [
+
+        "نام و نام خانوادگی",
+        "نام مشتری",
+        "نام",
+        "مشتری"
+
+    ],
+
+    phone: [
+
+        "شماره تماس",
+        "شماره تلفن",
+        "تلفن",
+        "موبایل",
+        "شماره"
+
+    ],
+
+    address: [
+
+        "آدرس",
+        "نشانی"
+
+    ],
+
+    device: [
+
+        "نوع دستگاه",
+        "دستگاه",
+        "مدل دستگاه",
+        "مدل"
+
+    ],
+
+    install: [
+
+        "تاریخ نصب"
+
+    ],
+
+    filter: [
+
+        "تعویض فیلتر",
+        "آخرین تعویض فیلتر"
+
+    ],
+
+    f56: [
+
+        "فیلتر 5و6",
+        "فیلتر ۵و۶",
+        "فیلتر ۵ و ۶",
+        "فیلتر5و6"
+
+    ],
+
+    next: [
+
+        "تاریخ بعدی",
+        "موعد سرویس بعدی",
+        "سرویس بعدی"
+
+    ],
+
+    membrane: [
+
+        "ممبران"
+
+    ],
+
+    notes: [
+
+        "ملاحظات",
+        "ملاحضات",
+        "توضیحات",
+        "یادداشت"
+
+    ],
+
+    debt: [
+
+        "بدهکاری",
+        "بدهی"
+
+    ]
+
+};
+
+
+function findColumn(
+    headers,
+    possibleNames
+){
+
+    const wanted =
+        possibleNames.map(
+            normalizeText
+        );
+
+
+    for(
+        let i=0;
+        i<headers.length;
+        i++
+    ){
+
+        const h =
+            normalizeText(
+                headers[i]
+            );
+
+
+        if(
+            wanted.includes(h)
+        ){
+
+            return i;
+        }
+    }
+
+
+    return -1;
+}
+
+
+/* -----------------------------
+   پیدا کردن ردیف Header
+----------------------------- */
+
+
+function findHeaderRow(rows){
+
+    let bestIndex = -1;
+
+    let bestScore = 0;
+
+
+    const max =
+        Math.min(
+            rows.length,
+            20
+        );
+
+
+    for(
+        let r=0;
+        r<max;
+        r++
+    ){
+
+        const row =
+            rows[r] || [];
+
+
+        let score = 0;
+
+
+        for(
+            const key in aliases
+        ){
+
+            if(
+                findColumn(
+                    row,
+                    aliases[key]
+                ) >= 0
+            ){
+
+                score++;
+            }
+        }
+
+
+        if(score > bestScore){
+
+            bestScore = score;
+
+            bestIndex = r;
+        }
+    }
+
+
+    if(bestScore >= 2){
+
+        return bestIndex;
+    }
+
+
+    return -1;
+}
+
+
+/* -----------------------------
+   تشخیص شیت مشتری
+----------------------------- */
+
+
+function scoreSheet(
+    sheetName,
+    rows
+){
+
+    if(
+        !rows ||
+        !rows.length
+    ){
+
+        return {
+            score:0,
+            header:-1
+        };
+    }
+
+
+    const header =
+        findHeaderRow(rows);
+
+
+    if(header < 0){
+
+        return {
+            score:0,
+            header:-1
+        };
+    }
+
+
+    let score = 0;
+
+
+    const sheet =
+        normalizeText(
+            sheetName
+        );
+
+
+    if(
+        sheet ===
+        normalizeText("مشتري")
+    ){
+
+        score += 100;
+    }
+
+
+    if(
+        sheet ===
+        normalizeText("هاکان نوین")
+    ){
+
+        score += 90;
+    }
+
+
+    const headers =
+        rows[header] || [];
+
+
+    for(
+        const key in aliases
+    ){
+
+        if(
+            findColumn(
+                headers,
+                aliases[key]
+            ) >= 0
+        ){
+
+            score += 10;
+        }
+    }
+
+
+    let dataRows = 0;
+
+
+    for(
+        let i=header+1;
+        i<rows.length;
+        i++
+    ){
+
+        const row =
+            rows[i] || [];
+
+
+        const hasData =
+            row.some(
+                function(v){
+
+                    return String(
+                        v ?? ""
+                    ).trim() !== "";
+                }
+            );
+
+
+        if(hasData){
+
+            dataRows++;
+        }
+    }
+
+
+    score +=
+        Math.min(
+            dataRows,
+            20
+        );
+
+
+    return {
+
+        score:score,
+
+        header:header
+    };
+}
+
+
+/* -----------------------------
+   تبدیل ردیف
+----------------------------- */
+
+
+function convertRow(
+    row,
+    headers
+){
+
+    function get(
+        names
+    ){
+
+        const col =
+            findColumn(
+                headers,
+                names
+            );
+
+
+        if(col < 0){
+
+            return "";
+        }
+
+
+        const value =
+            row[col];
+
+
+        if(
+            value === undefined ||
+            value === null
+        ){
+
+            return "";
+        }
+
+
+        return String(
+            value
+        ).trim();
+    }
+
+
+    let phone =
+        get(
+            aliases.phone
+        );
+
+
+    /*
+     * اگر Excel شماره را
+     * به صورت 9301234567 ذخیره کرده
+     * صفر ابتدای آن اضافه می‌شود.
+     */
+
+    phone =
+        normalizePhone(
+            phone
+        );
+
+
+    return {
+
+        name:
+            get(
+                aliases.name
+            ),
+
+        phone:
+            phone,
+
+        address:
+            get(
+                aliases.address
+            ),
+
+        device:
+            get(
+                aliases.device
+            ),
+
+        install:
+            get(
+                aliases.install
+            ),
+
+        filter:
+            get(
+                aliases.filter
+            ),
+
+        f56:
+            get(
+                aliases.f56
+            ),
+
+        next:
+            get(
+                aliases.next
+            ),
+
+        membrane:
+            get(
+                aliases.membrane
+            ),
+
+        notes:
+            get(
+                aliases.notes
+            ),
+
+        debt:
+            get(
+                aliases.debt
+            ),
+
+        imported:
+            true
+
+    };
+}
+
+
+/* -----------------------------
+   شماره تلفن
+----------------------------- */
+
+
+function normalizePhone(phone){
+
+    phone =
+        String(phone || "")
+        .trim();
+
+
+    phone =
+        phone.replace(
+            /\s+/g,
+            ""
+        );
+
+
+    phone =
+        phone.replace(
+            /[۰-۹]/g,
+            function(d){
+
+                return
+                    "۰۱۲۳۴۵۶۷۸۹"
+                    .indexOf(d);
+            }
+        );
+
+
+    /*
+     * Excel گاهی شماره عددی را
+     * به صورت 9301234567.0 می‌دهد.
+     */
+
+    phone =
+        phone.replace(
+            /\.0$/,
+            ""
+        );
+
+
+    if(
+        /^9\d{9}$/.test(phone)
+    ){
+
+        phone =
+            "0" + phone;
+    }
+
+
+    return phone;
+}
+
+
+/* -----------------------------
+   ورود Excel
+----------------------------- */
+
+
+function importExcel(event){
+
+    const file =
+        event.target.files[0];
+
+
+    if(!file){
+
+        return;
+    }
+
+
+    showMessage(
+        "⏳ در حال خواندن فایل Excel..."
+    );
+
+
+    const reader =
+        new FileReader();
+
+
+    reader.onload =
+        function(e){
+
+            try{
+
+                const data =
+                    new Uint8Array(
+                        e.target.result
+                    );
+
+
+                const workbook =
+                    XLSX.read(
+                        data,
+                        {
+                            type:"array",
+                            cellDates:false
+                        }
+                    );
+
+
+                if(
+                    !workbook.SheetNames ||
+                    !workbook.SheetNames.length
+                ){
+
+                    alert(
+                        "فایل Excel هیچ شیتی ندارد."
+                    );
+
+                    return;
+                }
+
+
+                let best = null;
+
 
                 /*
-                 * همه شیت‌ها بررسی می‌شوند.
-                 * Sheet3 خالی باشد، رد می‌شود.
+                 * تمام شیت‌ها بررسی می‌شوند.
                  */
 
-                for(const sheetName of workbook.SheetNames){
+                workbook.SheetNames.forEach(
+                    function(sheetName){
 
-                  const sheet=workbook.Sheets[sheetName];
+                        const ws =
+                            workbook.Sheets[
+                                sheetName
+                            ];
 
-                  if(!sheet)
-                    continue;
 
-                  const rows=XLSX.utils.sheet_to_json(
-                    sheet,
-                    {
-                      header:1,
-                      defval:"",
-                      raw:false
+                        if(!ws){
+
+                            return;
+                        }
+
+
+                        const rows =
+                            XLSX.utils.sheet_to_json(
+                                ws,
+                                {
+                                    header:1,
+                                    defval:"",
+                                    raw:false
+                                }
+                            );
+
+
+                        const result =
+                            scoreSheet(
+                                sheetName,
+                                rows
+                            );
+
+
+                        if(
+                            result.score > 0 &&
+                            (
+                                best === null ||
+                                result.score >
+                                best.score
+                            )
+                        ){
+
+                            best = {
+
+                                sheet:
+                                    sheetName,
+
+                                rows:
+                                    rows,
+
+                                score:
+                                    result.score,
+
+                                header:
+                                    result.header
+                            };
+                        }
+
                     }
-                  );
+                );
 
-                  if(sheetHasCustomerData(rows)){
 
-                    selectedRows=rows;
-                    selectedSheet=sheetName;
+                if(!best){
 
-                    break;
-                  }
+                    alert(
+                        "❌ هیچ شیت مشتری در فایل پیدا نشد.\n\n"+
+                        "باید حداقل ستون‌هایی مثل «نام»، «شماره تماس» یا «آدرس» وجود داشته باشد."
+                    );
+
+                    return;
                 }
 
-                if(!selectedRows){
 
-                  alert(
-                    "در هیچ‌کدام از شیت‌های فایل، ستون‌های مشتری پیدا نشد.\n\n"+
-                    "نام ستون‌ها باید شامل نام، شماره تماس یا آدرس باشد."
-                  );
+                const headers =
+                    best.rows[
+                        best.header
+                    ] || [];
 
-                  return;
+
+                const imported = [];
+
+
+                for(
+                    let r =
+                        best.header + 1;
+                    r < best.rows.length;
+                    r++
+                ){
+
+                    const row =
+                        best.rows[r];
+
+
+                    if(!row){
+
+                        continue;
+                    }
+
+
+                    const isBlank =
+                        row.every(
+                            function(v){
+
+                                return String(
+                                    v ?? ""
+                                ).trim() === "";
+                            }
+                        );
+
+
+                    if(isBlank){
+
+                        continue;
+                    }
+
+
+                    const customer =
+                        convertRow(
+                            row,
+                            headers
+                        );
+
+
+                    /*
+                     * اگر حداقل یکی از
+                     * اطلاعات اصلی وجود داشته باشد
+                     * ردیف مشتری محسوب می‌شود.
+                     */
+
+                    if(
+                        customer.name ||
+                        customer.phone ||
+                        customer.address ||
+                        customer.device
+                    ){
+
+                        imported.push(
+                            customer
+                        );
+                    }
                 }
 
-                const headers=selectedRows[0];
-
-                const imported=[];
-
-                for(let i=1;i<selectedRows.length;i++){
-
-                  const row=selectedRows[i];
-
-                  if(!row)
-                    continue;
-
-                  const c=convertRow(row,headers);
-
-                  if(rowLooksLikeCustomer(c))
-                    imported.push(c);
-                }
 
                 if(!imported.length){
 
-                  alert(
-                    "شیت «"+selectedSheet+"» پیدا شد، "+
-                    "اما ردیف مشتری قابل خواندن نبود."
-                  );
+                    alert(
+                        "شیت «"+
+                        best.sheet+
+                        "» پیدا شد ولی ردیف مشتری قابل خواندن نبود."
+                    );
 
-                  return;
+                    return;
                 }
+
 
                 /*
                  * اطلاعات قبلی پاک نمی‌شود.
-                 * مشتریان اکسل به لیست فعلی اضافه می‌شوند.
+                 * مشتریان جدید به لیست اضافه می‌شوند.
                  */
 
-                customers=customers.concat(imported);
+                const before =
+                    customers.length;
 
-                save();
+
+                customers =
+                    customers.concat(
+                        imported
+                    );
+
+
+                saveCustomers();
+
 
                 alert(
-                  "✅ ورود اکسل موفق بود\n\n"+
-                  "شیت: "+selectedSheet+"\n"+
-                  "تعداد مشتری واردشده: "+imported.length+"\n"+
-                  "تعداد کل مشتریان: "+customers.length
+
+                    "✅ ورود Excel موفق بود\n\n" +
+
+                    "📄 شیت انتخاب‌شده: " +
+                    best.sheet +
+                    "\n\n" +
+
+                    "👥 مشتری واردشده: " +
+                    imported.length +
+                    "\n\n" +
+
+                    "👥 تعداد کل مشتریان: " +
+                    customers.length
+
                 );
 
-                event.target.value="";
 
-              }catch(err){
+                showMessage(
+                    "✅ "+imported.length+
+                    " مشتری از Excel وارد شد."
+                );
 
-                console.error(err);
+
+                event.target.value = "";
+
+
+            }catch(error){
+
+                console.error(error);
+
 
                 alert(
-                  "خطا در خواندن فایل اکسل:\n"+
-                  err.message
+                    "❌ خطا در خواندن Excel\n\n"+
+                    error.message
                 );
-              }
 
-            };
-
-            reader.readAsArrayBuffer(file);
-          }
-
-
-          function exportExcel(){
-
-            if(!customers.length){
-
-              alert("هنوز مشتری‌ای برای خروجی وجود ندارد.");
-              return;
             }
 
-            const rows=customers.map((c,i)=>({
+        };
 
-              "ردیف":i+1,
-              "نام و نام خانوادگی":c.name||"",
-              "شماره تماس":c.phone||"",
-              "آدرس":c.address||"",
-              "نوع دستگاه":c.device||"",
-              "تاریخ نصب":c.install||"",
-              "آخرین تعویض فیلتر":c.filter||"",
-              "فیلتر 5و6":c.f56||"",
-              "تاریخ بعدی":c.next||"",
-              "ممبران":c.membrane||"",
-              "ملاحظات":c.notes||"",
-              "بدهکاری":c.debt||""
 
-            }));
+    reader.onerror =
+        function(){
 
-            const ws=XLSX.utils.json_to_sheet(rows);
-
-            const wb=XLSX.utils.book_new();
-
-            XLSX.utils.book_append_sheet(
-              wb,
-              ws,
-              "مشتریان"
+            alert(
+                "❌ برنامه نتوانست فایل را بخواند."
             );
 
-            XLSX.writeFile(
-              wb,
-              "HakanNovin-Customers.xlsx"
-            );
-          }
+        };
 
 
-          function clearCustomers(){
+    reader.readAsArrayBuffer(
+        file
+    );
+}
 
-            if(!customers.length){
-              alert("لیست مشتریان خالی است.");
-              return;
+
+/* -----------------------------
+   خروجی Excel
+----------------------------- */
+
+
+function exportExcel(){
+
+    if(!customers.length){
+
+        alert(
+            "هنوز مشتری‌ای برای خروجی وجود ندارد."
+        );
+
+        return;
+    }
+
+
+    const rows =
+        customers.map(
+            function(c,index){
+
+                return {
+
+                    "ردیف":
+                        index + 1,
+
+                    "نام و نام خانوادگی":
+                        c.name || "",
+
+                    "شماره تماس":
+                        c.phone || "",
+
+                    "آدرس":
+                        c.address || "",
+
+                    "نوع دستگاه":
+                        c.device || "",
+
+                    "تاریخ نصب":
+                        c.install || "",
+
+                    "آخرین تعویض فیلتر":
+                        c.filter || "",
+
+                    "فیلتر 5و6":
+                        c.f56 || "",
+
+                    "تاریخ بعدی":
+                        c.next || "",
+
+                    "ممبران":
+                        c.membrane || "",
+
+                    "ملاحظات":
+                        c.notes || "",
+
+                    "بدهکاری":
+                        c.debt || ""
+
+                };
+
             }
-
-            if(!confirm(
-              "⚠️ همه مشتریان از برنامه حذف شوند؟\n"+
-              "این کار قابل برگشت نیست."
-            ))
-              return;
-
-            customers=[];
-
-            save();
-
-            showMessage("همه مشتریان حذف شدند.");
-          }
+        );
 
 
-          load();
+    const ws =
+        XLSX.utils.json_to_sheet(
+            rows
+        );
 
-          </script>
 
-          </body>
-          </html>
-          EOF
+    const wb =
+        XLSX.utils.book_new();
+
+
+    XLSX.utils.book_append_sheet(
+        wb,
+        ws,
+        "مشتریان"
+    );
+
+
+    XLSX.writeFile(
+        wb,
+        "HakanNovin-Customers.xlsx"
+    );
+}
+
+
+/* -----------------------------
+   حذف همه
+----------------------------- */
+
+
+function clearCustomers(){
+
+    if(!customers.length){
+
+        alert(
+            "لیست مشتریان خالی است."
+        );
+
+        return;
+    }
+
+
+    if(
+        !confirm(
+            "⚠️ همه مشتریان حذف شوند؟\n\n"+
+            "این کار قابل برگشت نیست."
+        )
+    ){
+
+        return;
+    }
+
+
+    customers = [];
+
+
+    saveCustomers();
+
+
+    showMessage(
+        "همه مشتریان حذف شدند."
+    );
+}
+
+
+/* -----------------------------
+   شروع برنامه
+----------------------------- */
+
+
+loadCustomers();
+
+
+</script>
+
+</body>
+
+</html>
+EOF
 
       - name: Setup Gradle
+        shell: bash
         run: |
-          gradle wrapper --gradle-version 8.7
+
+          curl -L --fail \
+            https://services.gradle.org/distributions/gradle-8.7-bin.zip \
+            -o gradle.zip
+
+          unzip -q gradle.zip
+
+          gradle-8.7/bin/gradle wrapper \
+            --gradle-version 8.7
 
       - name: Build APK
+        shell: bash
         run: |
+
           chmod +x gradlew
-          ./gradlew assembleDebug
+
+          ./gradlew assembleDebug \
+            --no-daemon \
+            --stacktrace
 
       - name: Check APK
+        shell: bash
         run: |
-          ls -lh app/build/outputs/apk/debug/
-          test -f app/build/outputs/apk/debug/app-debug.apk
+
+          echo "APK files:"
+
+          find app/build/outputs \
+            -type f \
+            -name "*.apk" \
+            -print
+
+          test \
+            -f \
+            app/build/outputs/apk/debug/app-debug.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: HakanNovin-APK-v3.1
+          name: HakanNovin-APK-v3.2
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
