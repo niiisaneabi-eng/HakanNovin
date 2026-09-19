@@ -1,26 +1,33 @@
-name: Build HakanNovin APK v3
+name: Build HakanNovin APK V3.1
 
 on:
   workflow_dispatch:
   push:
-    paths:
-      - ".github/workflows/build-apk.yml"
+    branches: [main]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
       - name: Create Android project
         shell: bash
         run: |
-          set -e
-
-          mkdir -p hakan/app/src/main/java/com/hakannovin/app
-          mkdir -p hakan/app/src/main/assets
-          mkdir -p hakan/app/src/main/res/values
-
-          cat > hakan/settings.gradle <<'EOF'
+          mkdir -p app/src/main/java/com/hakannovin/app
+          mkdir -p app/src/main/assets
+          mkdir -p app/src/main/res/mipmap-hdpi
+          mkdir -p app/src/main/res/values
+          
+          cat > settings.gradle <<'EOF'
           pluginManagement {
               repositories {
                   google()
@@ -41,18 +48,19 @@ jobs:
           include(":app")
           EOF
 
-          cat > hakan/build.gradle <<'EOF'
+          cat > build.gradle <<'EOF'
           plugins {
               id 'com.android.application' version '8.5.2' apply false
           }
           EOF
 
-          cat > hakan/gradle.properties <<'EOF'
-          org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+          cat > gradle.properties <<'EOF'
           android.useAndroidX=true
+          android.nonTransitiveRClass=true
+          org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
           EOF
 
-          cat > hakan/app/build.gradle <<'EOF'
+          cat > app/build.gradle <<'EOF'
           plugins {
               id 'com.android.application'
           }
@@ -62,1154 +70,1138 @@ jobs:
               compileSdk 35
 
               defaultConfig {
-                  applicationId 'com.hakannovin.app'
+                  applicationId "com.hakannovin.app"
                   minSdk 23
                   targetSdk 35
-                  versionCode 3
-                  versionName "3.0"
+                  versionCode 31
+                  versionName "3.1"
               }
           }
           EOF
 
-          cat > hakan/app/src/main/AndroidManifest.xml <<'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
+          cat > app/src/main/res/values/strings.xml <<'EOF'
+          <resources>
+              <string name="app_name">هاکان نوین</string>
+          </resources>
+          EOF
+
+          cat > app/src/main/AndroidManifest.xml <<'EOF'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
               <application
-                  android:theme="@style/AppTheme"
-                  android:label="هاکان نوین"
                   android:allowBackup="true"
-                  android:supportsRtl="true">
+                  android:label="@string/app_name"
+                  android:theme="@style/AppTheme"
+                  android:usesCleartextTraffic="true">
 
                   <activity
                       android:name=".MainActivity"
-                      android:exported="true"
-                      android:screenOrientation="portrait">
+                      android:screenOrientation="portrait"
+                      android:exported="true">
 
                       <intent-filter>
-                          <action android:name="android.intent.action.MAIN"/>
-                          <category android:name="android.intent.category.LAUNCHER"/>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
                       </intent-filter>
 
                   </activity>
-
               </application>
 
           </manifest>
           EOF
 
-          cat > hakan/app/src/main/res/values/styles.xml <<'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
+          cat > app/src/main/res/values/styles.xml <<'EOF'
           <resources>
-
-              <style
-                  name="AppTheme"
-                  parent="android:style/Theme.Material.Light.NoActionBar">
-
+              <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
                   <item name="android:fontFamily">sans</item>
-                  <item name="android:statusBarColor">#0B7285</item>
-                  <item name="android:navigationBarColor">#F5F8FA</item>
                   <item name="android:windowLightStatusBar">false</item>
-
+                  <item name="android:statusBarColor">#087f8c</item>
+                  <item name="android:navigationBarColor">#ffffff</item>
+                  <item name="android:colorAccent">#087f8c</item>
               </style>
-
           </resources>
           EOF
 
-          cat > hakan/app/src/main/java/com/hakannovin/app/MainActivity.java <<'EOF'
+      - name: Download SheetJS
+        shell: bash
+        run: |
+          curl -L \
+            https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js \
+            -o app/src/main/assets/xlsx.full.min.js
+
+      - name: Create MainActivity
+        shell: bash
+        run: |
+          cat > app/src/main/java/com/hakannovin/app/MainActivity.java <<'EOF'
           package com.hakannovin.app;
 
           import android.app.Activity;
           import android.os.Bundle;
-          import android.webkit.WebChromeClient;
+          import android.webkit.WebSettings;
           import android.webkit.WebView;
-          import android.webkit.ValueCallback;
-          import android.webkit.WebView;
-          import android.content.Intent;
-          import android.net.Uri;
+          import android.webkit.WebViewClient;
 
           public class MainActivity extends Activity {
 
-              WebView web;
-              ValueCallback<Uri[]> upload;
-
               @Override
-              protected void onCreate(Bundle state) {
-                  super.onCreate(state);
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
 
-                  web = new WebView(this);
+                  WebView web = new WebView(this);
 
-                  web.setBackgroundColor(0xFFF5F8FA);
+                  WebSettings settings = web.getSettings();
+                  settings.setJavaScriptEnabled(true);
+                  settings.setDomStorageEnabled(true);
+                  settings.setAllowFileAccess(true);
+                  settings.setAllowContentAccess(true);
 
-                  web.getSettings().setJavaScriptEnabled(true);
-                  web.getSettings().setDomStorageEnabled(true);
-                  web.getSettings().setAllowFileAccess(true);
-
-                  web.setWebChromeClient(new WebChromeClient() {
-
-                      @Override
-                      public boolean onShowFileChooser(
-                              WebView view,
-                              ValueCallback<Uri[]> callback,
-                              FileChooserParams params) {
-
-                          upload = callback;
-
-                          Intent i =
-                                  new Intent(Intent.ACTION_OPEN_DOCUMENT);
-
-                          i.addCategory(
-                                  Intent.CATEGORY_OPENABLE);
-
-                          i.setType("*/*");
-
-                          i.putExtra(
-                                  Intent.EXTRA_MIME_TYPES,
-                                  new String[]{
-                                      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                                      "application/vnd.ms-excel"
-                                  });
-
-                          startActivityForResult(i, 44);
-
-                          return true;
-                      }
-                  });
+                  web.setWebViewClient(new WebViewClient());
+                  web.loadUrl("file:///android_asset/index.html");
 
                   setContentView(web);
-
-                  web.loadUrl(
-                          "file:///android_asset/index.html");
-              }
-
-              @Override
-              protected void onActivityResult(
-                      int request,
-                      int result,
-                      Intent data) {
-
-                  super.onActivityResult(
-                          request,
-                          result,
-                          data);
-
-                  if (request == 44 && upload != null) {
-
-                      Uri[] selected = null;
-
-                      if (result == RESULT_OK &&
-                          data != null &&
-                          data.getData() != null) {
-
-                          selected =
-                                  new Uri[]{
-                                      data.getData()
-                                  };
-                      }
-
-                      upload.onReceiveValue(selected);
-                      upload = null;
-                  }
-              }
-
-              @Override
-              public void onBackPressed() {
-
-                  if (web.canGoBack()) {
-                      web.goBack();
-                  } else {
-                      super.onBackPressed();
-                  }
               }
           }
           EOF
 
-          wget -q \
-            https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js \
-            -O hakan/app/src/main/assets/xlsx.full.min.js
-
-          cat > hakan/app/src/main/assets/index.html <<'EOF'
-          <!doctype html>
-
+      - name: Create HakanNovin app
+        shell: bash
+        run: |
+          cat > app/src/main/assets/index.html <<'EOF'
+          <!DOCTYPE html>
           <html lang="fa" dir="rtl">
-
           <head>
-
-          <meta charset="utf-8">
-
-          <meta
-              name="viewport"
-              content="width=device-width,initial-scale=1">
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width,initial-scale=1">
 
           <title>هاکان نوین</title>
 
           <script src="xlsx.full.min.js"></script>
 
           <style>
-
-          * {
-              box-sizing:border-box;
+          *{
+            box-sizing:border-box;
+            font-family:Tahoma,Arial,sans-serif;
           }
 
-          body {
-              margin:0;
-              background:#f5f8fa;
-              font-family:sans-serif;
-              color:#18343b;
+          body{
+            margin:0;
+            background:#f4f8f9;
+            color:#18343a;
           }
 
-          .top {
-              background:
-              linear-gradient(
-                  135deg,
-                  #087f8c,
-                  #0b7285
-              );
-
-              color:white;
-
-              padding:
-              24px 18px 28px;
-
-              border-radius:
-              0 0 28px 28px;
+          header{
+            background:linear-gradient(135deg,#087f8c,#12a6a0);
+            color:white;
+            padding:22px 18px;
+            border-radius:0 0 25px 25px;
+            box-shadow:0 4px 15px #0002;
           }
 
-          .brand {
-              display:flex;
-              align-items:center;
-              gap:12px;
+          header h1{
+            margin:0;
+            font-size:25px;
           }
 
-          .logo {
-              width:58px;
-              height:58px;
-
-              border-radius:18px;
-
-              background:white;
-
-              display:grid;
-              place-items:center;
-
-              font-size:34px;
+          header p{
+            margin:7px 0 0;
+            opacity:.9;
           }
 
-          h1 {
-              margin:0;
-              font-size:26px;
+          .container{
+            padding:15px;
+            max-width:800px;
+            margin:auto;
           }
 
-          .sub {
-              opacity:.9;
-              margin-top:5px;
-              font-size:13px;
+          .stats{
+            display:grid;
+            grid-template-columns:repeat(2,1fr);
+            gap:10px;
+            margin-top:-5px;
           }
 
-          .wrap {
-              padding:16px;
-              max-width:650px;
-              margin:auto;
+          .stat{
+            background:white;
+            padding:16px;
+            border-radius:17px;
+            box-shadow:0 2px 10px #00000010;
           }
 
-          .grid {
-              display:grid;
-              grid-template-columns:1fr 1fr;
-              gap:12px;
-              margin-top:-12px;
+          .stat b{
+            display:block;
+            font-size:24px;
+            color:#087f8c;
+            margin-bottom:4px;
           }
 
-          .card {
-              background:white;
-              border-radius:18px;
-              padding:18px;
-
-              box-shadow:
-              0 6px 20px #00000010;
+          button{
+            border:0;
+            border-radius:13px;
+            padding:13px 16px;
+            font-size:15px;
+            cursor:pointer;
           }
 
-          .num {
-              font-size:28px;
-              font-weight:800;
+          .primary{
+            background:#087f8c;
+            color:white;
           }
 
-          .lbl {
-              font-size:13px;
-              color:#668087;
+          .secondary{
+            background:#e2f3f4;
+            color:#087f8c;
           }
 
-          button,
-          .filebtn {
-
-              width:100%;
-
-              border:0;
-
-              border-radius:15px;
-
-              padding:15px;
-
-              font-size:15px;
-
-              font-weight:700;
-
-              margin-top:10px;
-
-              background:#0b7285;
-
-              color:white;
-
-              display:block;
-
-              text-align:center;
-
-              cursor:pointer;
+          .danger{
+            background:#ffe5e5;
+            color:#b00020;
           }
 
-          .secondary {
-
-              background:white;
-
-              color:#0b7285;
-
-              border:
-              1px solid #d5e5e8;
+          .toolbar{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:10px;
+            margin:15px 0;
           }
 
-          .search {
-
-              width:100%;
-
-              padding:15px;
-
-              border:
-              1px solid #d5e5e8;
-
-              border-radius:14px;
-
-              font-size:15px;
-
-              margin:12px 0;
+          input,select,textarea{
+            width:100%;
+            border:1px solid #d6e1e3;
+            border-radius:12px;
+            padding:13px;
+            font-size:15px;
+            background:white;
           }
 
-          .customer {
-
-              background:white;
-
-              border-radius:15px;
-
-              padding:14px;
-
-              margin:9px 0;
-
-              box-shadow:
-              0 3px 12px #00000008;
+          textarea{
+            min-height:90px;
+            resize:vertical;
           }
 
-          .name {
-
-              font-weight:800;
-
-              font-size:16px;
+          .search{
+            margin-bottom:10px;
           }
 
-          .meta {
-
-              color:#60777d;
-
-              font-size:13px;
-
-              margin-top:5px;
+          .customer{
+            background:white;
+            border-radius:16px;
+            padding:15px;
+            margin:9px 0;
+            box-shadow:0 2px 9px #0000000d;
           }
 
-          .hidden {
-              display:none;
+          .customer b{
+            font-size:17px;
           }
 
-          .empty {
-
-              text-align:center;
-
-              color:#74888d;
-
-              padding:35px;
+          .muted{
+            color:#718488;
+            font-size:13px;
+            margin-top:5px;
           }
 
-          .toast {
-
-              position:fixed;
-
-              bottom:18px;
-
-              left:18px;
-
-              right:18px;
-
-              background:#18343b;
-
-              color:white;
-
-              padding:14px;
-
-              border-radius:14px;
-
-              text-align:center;
-
-              display:none;
+          .actions{
+            display:flex;
+            gap:7px;
+            margin-top:10px;
+            flex-wrap:wrap;
           }
 
+          .modal{
+            display:none;
+            position:fixed;
+            inset:0;
+            background:#0008;
+            z-index:10;
+            padding:15px;
+            overflow:auto;
+          }
+
+          .modalBox{
+            background:#fff;
+            max-width:700px;
+            margin:25px auto;
+            border-radius:20px;
+            padding:18px;
+          }
+
+          .modalBox h2{
+            margin-top:0;
+          }
+
+          .field{
+            margin:10px 0;
+          }
+
+          .field label{
+            display:block;
+            margin-bottom:5px;
+            font-size:13px;
+            color:#607477;
+          }
+
+          .empty{
+            text-align:center;
+            background:white;
+            padding:35px 15px;
+            border-radius:17px;
+            color:#718488;
+          }
+
+          .success{
+            background:#e6f8ed;
+            color:#157347;
+            padding:12px;
+            border-radius:12px;
+            margin:10px 0;
+            display:none;
+          }
+
+          .warning{
+            background:#fff5dc;
+            color:#875f00;
+            padding:12px;
+            border-radius:12px;
+            margin:10px 0;
+          }
           </style>
-
           </head>
 
           <body>
 
-          <div class="top">
+          <header>
+            <h1>💧 هاکان نوین</h1>
+            <p>مدیریت مشتریان و سرویس تصفیه آب</p>
+          </header>
 
-              <div class="brand">
+          <div class="container">
 
-                  <div class="logo">
-                      💧
-                  </div>
-
-                  <div>
-
-                      <h1>
-                          هاکان نوین
-                      </h1>
-
-                      <div class="sub">
-                          مدیریت مشتریان و خدمات تصفیه آب
-                      </div>
-
-                  </div>
-
+            <div class="stats">
+              <div class="stat">
+                <b id="total">0</b>
+                مشتری
               </div>
+
+              <div class="stat">
+                <b id="phones">0</b>
+                دارای شماره
+              </div>
+            </div>
+
+            <div id="message" class="success"></div>
+
+            <div class="toolbar">
+              <button class="primary" onclick="openAdd()">➕ مشتری جدید</button>
+
+              <button class="secondary" onclick="document.getElementById('excel').click()">
+                📥 ورود اکسل
+              </button>
+
+              <input
+                id="excel"
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                style="display:none"
+                onchange="importExcel(event)"
+              />
+
+              <button class="secondary" onclick="exportExcel()">
+                📤 خروجی اکسل
+              </button>
+
+              <button class="danger" onclick="clearCustomers()">
+                🗑 حذف همه مشتریان
+              </button>
+            </div>
+
+            <input
+              id="search"
+              class="search"
+              placeholder="🔎 جستجوی نام، شماره، آدرس یا دستگاه..."
+              oninput="render()"
+            />
+
+            <div id="list"></div>
 
           </div>
 
 
-          <div class="wrap">
+          <div id="modal" class="modal">
 
+            <div class="modalBox">
 
-              <div class="grid">
+              <h2 id="modalTitle">مشتری جدید</h2>
 
-                  <div class="card">
-
-                      <div
-                          class="num"
-                          id="count">
-                          0
-                      </div>
-
-                      <div class="lbl">
-                          کل مشتریان
-                      </div>
-
-                  </div>
-
-
-                  <div class="card">
-
-                      <div
-                          class="num"
-                          id="due">
-                          0
-                      </div>
-
-                      <div class="lbl">
-                          موعد سرویس
-                      </div>
-
-                  </div>
-
+              <div class="field">
+                <label>نام و نام خانوادگی</label>
+                <input id="f_name">
               </div>
 
-
-              <label class="filebtn">
-
-                  📊 ورود مشتریان از Excel
-
-                  <input
-                      id="file"
-                      class="hidden"
-                      type="file"
-                      accept=".xlsx,.xls">
-
-              </label>
-
-
-              <button
-                  class="secondary"
-                  onclick="showList()">
-
-                  👥 لیست مشتریان
-
-              </button>
-
-
-              <button
-                  class="secondary"
-                  onclick="addCustomer()">
-
-                  ➕ مشتری جدید
-
-              </button>
-
-
-              <div id="panel"></div>
-
-
-              <div
-                  id="toast"
-                  class="toast">
+              <div class="field">
+                <label>شماره تماس</label>
+                <input id="f_phone" inputmode="tel">
               </div>
 
+              <div class="field">
+                <label>آدرس</label>
+                <textarea id="f_address"></textarea>
+              </div>
+
+              <div class="field">
+                <label>نوع دستگاه</label>
+                <input id="f_device">
+              </div>
+
+              <div class="field">
+                <label>تاریخ نصب</label>
+                <input id="f_install" placeholder="مثلاً 1404/02/15">
+              </div>
+
+              <div class="field">
+                <label>آخرین تعویض فیلتر</label>
+                <input id="f_filter" placeholder="مثلاً 1404/08/15">
+              </div>
+
+              <div class="field">
+                <label>تاریخ بعدی</label>
+                <input id="f_next" placeholder="مثلاً 1405/02/15">
+              </div>
+
+              <div class="field">
+                <label>فیلتر ۵ و ۶</label>
+                <input id="f_f56">
+              </div>
+
+              <div class="field">
+                <label>ممبران</label>
+                <input id="f_membrane">
+              </div>
+
+              <div class="field">
+                <label>ملاحظات</label>
+                <textarea id="f_notes"></textarea>
+              </div>
+
+              <div class="field">
+                <label>بدهکاری</label>
+                <input id="f_debt">
+              </div>
+
+              <div class="actions">
+                <button class="primary" onclick="saveCustomer()">ذخیره</button>
+                <button class="secondary" onclick="closeModal()">انصراف</button>
+              </div>
+
+            </div>
 
           </div>
 
 
           <script>
 
-          let customers =
-              JSON.parse(
-                  localStorage.getItem(
-                      'hakanCustomers'
-                  ) || '[]'
+          let customers = [];
+
+          let editIndex = -1;
+
+
+          function load(){
+
+            try{
+              customers = JSON.parse(
+                localStorage.getItem("hakan_novin_customers") || "[]"
               );
 
+              if(!Array.isArray(customers))
+                customers=[];
 
-          const save = () => {
+            }catch(e){
+              customers=[];
+            }
 
-              localStorage.setItem(
-                  'hakanCustomers',
-                  JSON.stringify(customers)
-              );
-
-              update();
-          };
-
-
-          const norm = s =>
-
-              String(s ?? '')
-              .replace(
-                  /[\s\u200c\u200d\uFEFF]/g,
-                  ''
-              )
-              .replace(
-                  /[۰-۹]/g,
-                  d =>
-                      '۰۱۲۳۴۵۶۷۸۹'
-                      .indexOf(d)
-              );
-
-
-          function headerMap(row) {
-
-              let m = {};
-
-              Object.keys(row).forEach(k => {
-
-                  m[norm(k)] = k;
-
-              });
-
-              return m;
+            render();
           }
 
 
-          function val(row,m,names) {
+          function save(){
 
-              for (const n of names) {
+            localStorage.setItem(
+              "hakan_novin_customers",
+              JSON.stringify(customers)
+            );
 
-                  if (
-                      m[norm(n)] !== undefined
-                  ) {
-
-                      return row[
-                          m[norm(n)]
-                      ] ?? '';
-
-                  }
-
-              }
-
-              return '';
+            render();
           }
 
 
-          function update() {
+          function showMessage(text){
 
-              document
-                  .getElementById('count')
-                  .textContent =
-                  customers.length;
+            const box=document.getElementById("message");
 
+            box.textContent=text;
+            box.style.display="block";
 
-              document
-                  .getElementById('due')
-                  .textContent =
-                  customers.filter(
-                      x => x.nextDate
-                  ).length;
+            setTimeout(()=>{
+              box.style.display="none";
+            },4000);
           }
 
 
-          function toast(t) {
+          function openAdd(){
 
-              let e =
-                  document.getElementById(
-                      'toast'
-                  );
+            editIndex=-1;
 
-              e.textContent = t;
+            document.getElementById("modalTitle").textContent="مشتری جدید";
 
-              e.style.display = 'block';
+            [
+              "f_name",
+              "f_phone",
+              "f_address",
+              "f_device",
+              "f_install",
+              "f_filter",
+              "f_next",
+              "f_f56",
+              "f_membrane",
+              "f_notes",
+              "f_debt"
+            ].forEach(id=>{
+              document.getElementById(id).value="";
+            });
 
-              setTimeout(
-                  () => {
-                      e.style.display = 'none';
-                  },
-                  2500
-              );
+            document.getElementById("modal").style.display="block";
           }
 
 
-          document
-          .getElementById('file')
-          .onchange = async e => {
+          function closeModal(){
 
-              let f = e.target.files[0];
-
-              if (!f) return;
-
-
-              try {
-
-                  let data =
-                      await f.arrayBuffer();
-
-
-                  let wb =
-                      XLSX.read(
-                          data,
-                          {
-                              type:'array',
-                              cellDates:false
-                          }
-                      );
-
-
-                  let ws =
-                      wb.Sheets[
-                          wb.SheetNames[0]
-                      ];
-
-
-                  let rows =
-                      XLSX.utils.sheet_to_json(
-                          ws,
-                          {
-                              defval:'',
-                              raw:false
-                          }
-                      );
-
-
-                  if (!rows.length) {
-
-                      toast(
-                          'فایل Excel خالی است'
-                      );
-
-                      return;
-                  }
-
-
-                  let imported =
-                      rows.map(r => {
-
-                          let m =
-                              headerMap(r);
-
-
-                          return {
-
-                              name:
-                              String(
-                                  val(
-                                      r,
-                                      m,
-                                      [
-                                          'نام و نام خانوادگی',
-                                          'نام'
-                                      ]
-                                  )
-                              ).trim(),
-
-
-                              installDate:
-                              String(
-                                  val(
-                                      r,
-                                      m,
-                                      ['تاریخ نصب']
-                                  )
-                              ).trim(),
-
-
-                              address:
-                              String(
-                                  val(
-                                      r,
-                                      m,
-                                      ['آدرس']
-                                  )
-                              ).trim(),
-
-
-                              phone:
-                              String(
-                                  val(
-                                      r,
-                                      m,
-                                      [
-                                          'شماره تماس',
-                                          'تلفن',
-                                          'شماره تلفن'
-                                      ]
-                                  )
-                              ).trim(),
-
-
-                              filterDate:
-                              String(
-                                  val(
-                                      r,
-                                      m,
-                                      ['تعویض فیلتر']
-                                  )
-                              ).trim(),
-
-
-                              filter56:
-                              String(
-                                  val(
-                                      r,
-                                      m,
-                                      [
-                                          'فیلتر 5و6',
-                                          'فیلتر ۵ و ۶'
-                                      ]
-                                  )
-                              ).trim(),
-
-
-                              nextDate:
-                              String(
-                                  val(
-                                      r,
-                                      m,
-                                      ['تاریخ بعدی']
-                                  )
-                              ).trim(),
-
-
-                              device:
-                              String(
-                                  val(
-                                      r,
-                                      m,
-                                      ['نوع دستگاه']
-                                  )
-                              ).trim(),
-
-
-                              membrane:
-                              String(
-                                  val(
-                                      r,
-                                      m,
-                                      ['ممبران']
-                                  )
-                              ).trim(),
-
-
-                              notes:
-                              String(
-                                  val(
-                                      r,
-                                      m,
-                                      ['ملاحظات']
-                                  )
-                              ).trim(),
-
-
-                              debt:
-                              String(
-                                  val(
-                                      r,
-                                      m,
-                                      ['بدهکاری']
-                                  )
-                              ).trim()
-
-                          };
-
-                      })
-                      .filter(
-                          x =>
-                          x.name ||
-                          x.phone
-                      );
-
-
-                  customers = imported;
-
-                  save();
-
-                  showList();
-
-                  toast(
-                      imported.length +
-                      ' مشتری با موفقیت وارد شد'
-                  );
-
-
-              } catch(err) {
-
-                  toast(
-                      'خطا در خواندن Excel: ' +
-                      err.message
-                  );
-
-              }
-
-
-              e.target.value = '';
-
-          };
-
-
-          function showList() {
-
-              let p =
-                  document.getElementById(
-                      'panel'
-                  );
-
-
-              p.innerHTML =
-
-                  '<input id="q" class="search" ' +
-                  'placeholder="جستجو با نام یا شماره...">' +
-
-                  '<div id="list"></div>';
-
-
-              let q =
-                  document.getElementById('q');
-
-
-              q.oninput = render;
-
-
-              render();
-
-
-              function render() {
-
-                  let s =
-                      q.value.trim();
-
-
-                  let a =
-                      customers.filter(
-                          x =>
-                          !s ||
-                          x.name.includes(s) ||
-                          x.phone.includes(s)
-                      );
-
-
-                  document
-                  .getElementById('list')
-                  .innerHTML =
-
-                      a.length
-
-                      ?
-
-                      a.map(x =>
-
-                          '<div class="customer" ' +
-                          'onclick="detail(' +
-                          customers.indexOf(x) +
-                          ')">' +
-
-                          '<div class="name">' +
-                          esc(
-                              x.name ||
-                              'بدون نام'
-                          ) +
-                          '</div>' +
-
-                          '<div class="meta">' +
-                          '📞 ' +
-                          esc(x.phone) +
-                          ' · 💧 ' +
-                          esc(x.device) +
-                          '</div>' +
-
-                          '<div class="meta">' +
-                          '📅 سرویس بعدی: ' +
-                          esc(
-                              x.nextDate ||
-                              'ثبت نشده'
-                          ) +
-                          '</div>' +
-
-                          '</div>'
-
-                      ).join('')
-
-                      :
-
-                      '<div class="empty">' +
-                      'هنوز مشتری ثبت نشده' +
-                      '</div>';
-              }
-
+            document.getElementById("modal").style.display="none";
           }
 
 
-          function detail(i) {
+          function saveCustomer(){
 
-              let x =
-                  customers[i];
+            const c={
+              name:document.getElementById("f_name").value.trim(),
+              phone:document.getElementById("f_phone").value.trim(),
+              address:document.getElementById("f_address").value.trim(),
+              device:document.getElementById("f_device").value.trim(),
+              install:document.getElementById("f_install").value.trim(),
+              filter:document.getElementById("f_filter").value.trim(),
+              next:document.getElementById("f_next").value.trim(),
+              f56:document.getElementById("f_f56").value.trim(),
+              membrane:document.getElementById("f_membrane").value.trim(),
+              notes:document.getElementById("f_notes").value.trim(),
+              debt:document.getElementById("f_debt").value.trim()
+            };
 
+            if(!c.name && !c.phone){
+              alert("حداقل نام یا شماره تماس را وارد کن.");
+              return;
+            }
 
-              document
-              .getElementById('panel')
-              .innerHTML =
-
-                  '<div class="card">' +
-
-                  '<h2>' +
-                  esc(
-                      x.name ||
-                      'مشتری'
-                  ) +
-                  '</h2>' +
-
-                  '<p>📞 ' +
-                  esc(x.phone) +
-                  '</p>' +
-
-                  '<p>📍 ' +
-                  esc(x.address) +
-                  '</p>' +
-
-                  '<p>💧 ' +
-                  esc(x.device) +
-                  '</p>' +
-
-                  '<p>📅 نصب: ' +
-                  esc(x.installDate) +
-                  '</p>' +
-
-                  '<p>🔧 تعویض فیلتر: ' +
-                  esc(x.filterDate) +
-                  '</p>' +
-
-                  '<p>📅 سرویس بعدی: ' +
-                  esc(x.nextDate) +
-                  '</p>' +
-
-                  '<p>فیلتر ۵ و ۶: ' +
-                  esc(x.filter56) +
-                  '</p>' +
-
-                  '<p>ممبران: ' +
-                  esc(x.membrane) +
-                  '</p>' +
-
-                  '<p>💰 بدهکاری: ' +
-                  esc(x.debt) +
-                  '</p>' +
-
-                  '<p>📝 ' +
-                  esc(x.notes) +
-                  '</p>' +
-
-                  '<button onclick="showList()">' +
-                  '↩️ برگشت' +
-                  '</button>' +
-
-                  '</div>';
-          }
-
-
-          function addCustomer() {
-
-              document
-              .getElementById('panel')
-              .innerHTML =
-
-                  '<div class="card">' +
-
-                  '<h2>مشتری جدید</h2>' +
-
-                  '<input id="n" class="search" ' +
-                  'placeholder="نام و نام خانوادگی">' +
-
-                  '<input id="ph" class="search" ' +
-                  'placeholder="شماره تماس">' +
-
-                  '<input id="ad" class="search" ' +
-                  'placeholder="آدرس">' +
-
-                  '<input id="dev" class="search" ' +
-                  'placeholder="نوع دستگاه">' +
-
-                  '<button onclick="doAdd()">' +
-                  'ثبت مشتری' +
-                  '</button>' +
-
-                  '<button class="secondary" ' +
-                  'onclick="showList()">' +
-                  'انصراف' +
-                  '</button>' +
-
-                  '</div>';
-          }
-
-
-          function doAdd() {
-
-              let x = {
-
-                  name:
-                  document
-                  .getElementById('n')
-                  .value.trim(),
-
-                  phone:
-                  document
-                  .getElementById('ph')
-                  .value.trim(),
-
-                  address:
-                  document
-                  .getElementById('ad')
-                  .value.trim(),
-
-                  device:
-                  document
-                  .getElementById('dev')
-                  .value.trim(),
-
-                  installDate:'',
-                  filterDate:'',
-                  filter56:'',
-                  nextDate:'',
-                  membrane:'',
-                  notes:'',
-                  debt:''
+            if(editIndex>=0){
+              customers[editIndex]={
+                ...customers[editIndex],
+                ...c
               };
+            }else{
+              customers.push(c);
+            }
+
+            save();
+            closeModal();
+
+            showMessage(
+              editIndex>=0
+              ? "اطلاعات مشتری ویرایش شد."
+              : "مشتری با موفقیت اضافه شد."
+            );
+          }
 
 
-              if (
-                  !x.name &&
-                  !x.phone
-              ) {
+          function editCustomer(i){
 
-                  toast(
-                      'نام یا شماره را وارد کنید'
+            const c=customers[i];
+
+            editIndex=i;
+
+            document.getElementById("modalTitle").textContent="ویرایش مشتری";
+
+            document.getElementById("f_name").value=c.name||"";
+            document.getElementById("f_phone").value=c.phone||"";
+            document.getElementById("f_address").value=c.address||"";
+            document.getElementById("f_device").value=c.device||"";
+            document.getElementById("f_install").value=c.install||"";
+            document.getElementById("f_filter").value=c.filter||"";
+            document.getElementById("f_next").value=c.next||"";
+            document.getElementById("f_f56").value=c.f56||"";
+            document.getElementById("f_membrane").value=c.membrane||"";
+            document.getElementById("f_notes").value=c.notes||"";
+            document.getElementById("f_debt").value=c.debt||"";
+
+            document.getElementById("modal").style.display="block";
+          }
+
+
+          function deleteCustomer(i){
+
+            if(!confirm("این مشتری حذف شود؟"))
+              return;
+
+            customers.splice(i,1);
+            save();
+
+            showMessage("مشتری حذف شد.");
+          }
+
+
+          function render(){
+
+            document.getElementById("total").textContent=customers.length;
+
+            document.getElementById("phones").textContent=
+              customers.filter(c=>c.phone).length;
+
+            const q=
+              document.getElementById("search").value
+              .trim()
+              .toLowerCase();
+
+            const list=document.getElementById("list");
+
+            const filtered=customers.filter(c=>{
+
+              const text=[
+                c.name,
+                c.phone,
+                c.address,
+                c.device,
+                c.notes
+              ].join(" ").toLowerCase();
+
+              return !q || text.includes(q);
+            });
+
+            if(!filtered.length){
+
+              list.innerHTML=
+                '<div class="empty">هنوز مشتری‌ای ثبت نشده است.</div>';
+
+              return;
+            }
+
+            list.innerHTML=filtered.map(c=>{
+
+              const i=customers.indexOf(c);
+
+              return `
+                <div class="customer">
+
+                  <b>${escapeHtml(c.name||"بدون نام")}</b>
+
+                  <div class="muted">
+                    📞 ${escapeHtml(c.phone||"بدون شماره")}
+                  </div>
+
+                  <div class="muted">
+                    📍 ${escapeHtml(c.address||"بدون آدرس")}
+                  </div>
+
+                  <div class="muted">
+                    💧 ${escapeHtml(c.device||"نوع دستگاه ثبت نشده")}
+                  </div>
+
+                  <div class="actions">
+
+                    ${
+                      c.phone
+                      ?
+                      `<button class="secondary"
+                        onclick="callCustomer('${escapeAttr(c.phone)}')">
+                        📞 تماس
+                      </button>`
+                      :
+                      ""
+                    }
+
+                    <button class="secondary"
+                      onclick="editCustomer(${i})">
+                      ✏️ ویرایش
+                    </button>
+
+                    <button class="danger"
+                      onclick="deleteCustomer(${i})">
+                      حذف
+                    </button>
+
+                  </div>
+
+                </div>
+              `;
+
+            }).join("");
+          }
+
+
+          function escapeHtml(v){
+
+            return String(v||"")
+              .replace(/&/g,"&amp;")
+              .replace(/</g,"&lt;")
+              .replace(/>/g,"&gt;")
+              .replace(/"/g,"&quot;")
+              .replace(/'/g,"&#039;");
+          }
+
+
+          function escapeAttr(v){
+
+            return String(v||"").replace(/'/g,"\\'");
+          }
+
+
+          function callCustomer(phone){
+
+            window.location.href="tel:"+phone;
+          }
+
+
+          /*
+           * مهم‌ترین اصلاح V3.1:
+           * دیگر فقط Sheet[0] خوانده نمی‌شود.
+           * تمام شیت‌ها بررسی می‌شوند و اولین شیت دارای
+           * اطلاعات واقعی مشتری انتخاب می‌شود.
+           */
+
+          function normalizeHeader(v){
+
+            return String(v??"")
+              .trim()
+              .replace(/\u200c/g,"")
+              .replace(/\s+/g,"")
+              .replace(/[يى]/g,"ی")
+              .replace(/ك/g,"ک")
+              .replace(/[۰-۹]/g,d=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d));
+          }
+
+
+          function findColumn(headers,names){
+
+            const wanted=names.map(normalizeHeader);
+
+            for(let i=0;i<headers.length;i++){
+
+              const h=normalizeHeader(headers[i]);
+
+              if(wanted.includes(h))
+                return i;
+            }
+
+            return -1;
+          }
+
+
+          function convertRow(row,headers){
+
+            const nameCol=findColumn(
+              headers,
+              [
+                "نام و نام خانوادگی",
+                "نام مشتری",
+                "نام",
+                "مشتری"
+              ]
+            );
+
+            const phoneCol=findColumn(
+              headers,
+              [
+                "شماره تماس",
+                "شماره تلفن",
+                "تلفن",
+                "موبایل",
+                "شماره"
+              ]
+            );
+
+            const addressCol=findColumn(
+              headers,
+              [
+                "آدرس",
+                "نشانی"
+              ]
+            );
+
+            const deviceCol=findColumn(
+              headers,
+              [
+                "نوع دستگاه",
+                "دستگاه",
+                "مدل دستگاه"
+              ]
+            );
+
+            const installCol=findColumn(
+              headers,
+              [
+                "تاریخ نصب",
+                "تاریخنصب"
+              ]
+            );
+
+            const filterCol=findColumn(
+              headers,
+              [
+                "تعویض فیلتر",
+                "آخرین تعویض فیلتر",
+                "تعویضفیلتر"
+              ]
+            );
+
+            const f56Col=findColumn(
+              headers,
+              [
+                "فیلتر 5و6",
+                "فیلتر ۵ و ۶",
+                "فیلتر ۵و۶",
+                "فیلتر5و6"
+              ]
+            );
+
+            const nextCol=findColumn(
+              headers,
+              [
+                "تاریخ بعدی",
+                "موعد سرویس بعدی",
+                "سرویس بعدی"
+              ]
+            );
+
+            const membraneCol=findColumn(
+              headers,
+              [
+                "ممبران",
+                "membrane"
+              ]
+            );
+
+            const notesCol=findColumn(
+              headers,
+              [
+                "ملاحظات",
+                "ملاحضات",
+                "توضیحات",
+                "یادداشت"
+              ]
+            );
+
+            const debtCol=findColumn(
+              headers,
+              [
+                "بدهکاری",
+                "بدهی"
+              ]
+            );
+
+            function value(col){
+
+              if(col<0)
+                return "";
+
+              return row[col]===undefined || row[col]===null
+                ? ""
+                : String(row[col]).trim();
+            }
+
+            return {
+
+              name:value(nameCol),
+
+              phone:value(phoneCol),
+
+              address:value(addressCol),
+
+              device:value(deviceCol),
+
+              install:value(installCol),
+
+              filter:value(filterCol),
+
+              f56:value(f56Col),
+
+              next:value(nextCol),
+
+              membrane:value(membraneCol),
+
+              notes:value(notesCol),
+
+              debt:value(debtCol),
+
+              imported:true
+            };
+          }
+
+
+          function rowLooksLikeCustomer(c){
+
+            return Boolean(
+              c.name ||
+              c.phone ||
+              c.address ||
+              c.device ||
+              c.install ||
+              c.next
+            );
+          }
+
+
+          function sheetHasCustomerData(rows){
+
+            if(!rows || !rows.length)
+              return false;
+
+            const headers=rows[0]||[];
+
+            const normalized=headers.map(normalizeHeader);
+
+            const hasName=
+              normalized.includes(normalizeHeader("نام و نام خانوادگی")) ||
+              normalized.includes(normalizeHeader("نام مشتری")) ||
+              normalized.includes(normalizeHeader("نام"));
+
+            const hasPhone=
+              normalized.includes(normalizeHeader("شماره تماس")) ||
+              normalized.includes(normalizeHeader("تلفن")) ||
+              normalized.includes(normalizeHeader("شماره تلفن"));
+
+            const hasAddress=
+              normalized.includes(normalizeHeader("آدرس"));
+
+            return hasName || hasPhone || hasAddress;
+          }
+
+
+          function importExcel(event){
+
+            const file=event.target.files[0];
+
+            if(!file)
+              return;
+
+            const reader=new FileReader();
+
+            reader.onload=function(e){
+
+              try{
+
+                const data=new Uint8Array(e.target.result);
+
+                const workbook=XLSX.read(
+                  data,
+                  {
+                    type:"array",
+                    cellDates:false
+                  }
+                );
+
+                if(!workbook.SheetNames.length){
+
+                  alert("هیچ شیتی در فایل اکسل پیدا نشد.");
+                  return;
+                }
+
+                let selectedRows=null;
+                let selectedSheet="";
+
+                /*
+                 * همه شیت‌ها بررسی می‌شوند.
+                 * Sheet3 خالی باشد، رد می‌شود.
+                 */
+
+                for(const sheetName of workbook.SheetNames){
+
+                  const sheet=workbook.Sheets[sheetName];
+
+                  if(!sheet)
+                    continue;
+
+                  const rows=XLSX.utils.sheet_to_json(
+                    sheet,
+                    {
+                      header:1,
+                      defval:"",
+                      raw:false
+                    }
+                  );
+
+                  if(sheetHasCustomerData(rows)){
+
+                    selectedRows=rows;
+                    selectedSheet=sheetName;
+
+                    break;
+                  }
+                }
+
+                if(!selectedRows){
+
+                  alert(
+                    "در هیچ‌کدام از شیت‌های فایل، ستون‌های مشتری پیدا نشد.\n\n"+
+                    "نام ستون‌ها باید شامل نام، شماره تماس یا آدرس باشد."
                   );
 
                   return;
+                }
+
+                const headers=selectedRows[0];
+
+                const imported=[];
+
+                for(let i=1;i<selectedRows.length;i++){
+
+                  const row=selectedRows[i];
+
+                  if(!row)
+                    continue;
+
+                  const c=convertRow(row,headers);
+
+                  if(rowLooksLikeCustomer(c))
+                    imported.push(c);
+                }
+
+                if(!imported.length){
+
+                  alert(
+                    "شیت «"+selectedSheet+"» پیدا شد، "+
+                    "اما ردیف مشتری قابل خواندن نبود."
+                  );
+
+                  return;
+                }
+
+                /*
+                 * اطلاعات قبلی پاک نمی‌شود.
+                 * مشتریان اکسل به لیست فعلی اضافه می‌شوند.
+                 */
+
+                customers=customers.concat(imported);
+
+                save();
+
+                alert(
+                  "✅ ورود اکسل موفق بود\n\n"+
+                  "شیت: "+selectedSheet+"\n"+
+                  "تعداد مشتری واردشده: "+imported.length+"\n"+
+                  "تعداد کل مشتریان: "+customers.length
+                );
+
+                event.target.value="";
+
+              }catch(err){
+
+                console.error(err);
+
+                alert(
+                  "خطا در خواندن فایل اکسل:\n"+
+                  err.message
+                );
               }
 
+            };
 
-              customers.push(x);
-
-              save();
-
-              showList();
-
-              toast(
-                  'مشتری با موفقیت ثبت شد'
-              );
+            reader.readAsArrayBuffer(file);
           }
 
 
-          function esc(s) {
+          function exportExcel(){
 
-              return String(
-                  s ?? ''
-              ).replace(
-                  /[&<>"']/g,
-                  c => ({
-                      '&':'&amp;',
-                      '<':'&lt;',
-                      '>':'&gt;',
-                      '"':'&quot;',
-                      "'":'&#39;'
-                  }[c])
-              );
+            if(!customers.length){
+
+              alert("هنوز مشتری‌ای برای خروجی وجود ندارد.");
+              return;
+            }
+
+            const rows=customers.map((c,i)=>({
+
+              "ردیف":i+1,
+              "نام و نام خانوادگی":c.name||"",
+              "شماره تماس":c.phone||"",
+              "آدرس":c.address||"",
+              "نوع دستگاه":c.device||"",
+              "تاریخ نصب":c.install||"",
+              "آخرین تعویض فیلتر":c.filter||"",
+              "فیلتر 5و6":c.f56||"",
+              "تاریخ بعدی":c.next||"",
+              "ممبران":c.membrane||"",
+              "ملاحظات":c.notes||"",
+              "بدهکاری":c.debt||""
+
+            }));
+
+            const ws=XLSX.utils.json_to_sheet(rows);
+
+            const wb=XLSX.utils.book_new();
+
+            XLSX.utils.book_append_sheet(
+              wb,
+              ws,
+              "مشتریان"
+            );
+
+            XLSX.writeFile(
+              wb,
+              "HakanNovin-Customers.xlsx"
+            );
           }
 
 
-          update();
+          function clearCustomers(){
+
+            if(!customers.length){
+              alert("لیست مشتریان خالی است.");
+              return;
+            }
+
+            if(!confirm(
+              "⚠️ همه مشتریان از برنامه حذف شوند؟\n"+
+              "این کار قابل برگشت نیست."
+            ))
+              return;
+
+            customers=[];
+
+            save();
+
+            showMessage("همه مشتریان حذف شدند.");
+          }
+
+
+          load();
 
           </script>
 
           </body>
-
           </html>
           EOF
 
-          cd hakan
-
-          wget -q \
-            https://services.gradle.org/distributions/gradle-8.7-bin.zip
-
-          unzip -q gradle-8.7-bin.zip
-
-          export PATH="$PWD/gradle-8.7/bin:$PATH"
-
+      - name: Setup Gradle
+        run: |
           gradle wrapper --gradle-version 8.7
 
+      - name: Build APK
+        run: |
+          chmod +x gradlew
           ./gradlew assembleDebug
 
-
       - name: Check APK
-        shell: bash
         run: |
-
-          set -e
-
-          echo "Checking APK..."
-
-          test -f \
-            hakan/app/build/outputs/apk/debug/app-debug.apk
-
-          ls -lh \
-            hakan/app/build/outputs/apk/debug/app-debug.apk
-
-          echo "APK FOUND"
-
+          ls -lh app/build/outputs/apk/debug/
+          test -f app/build/outputs/apk/debug/app-debug.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
-
         with:
-
-          name: HakanNovin-APK-v3
-
-          path:
-            hakan/app/build/outputs/apk/debug/app-debug.apk
-
+          name: HakanNovin-APK-v3.1
+          path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
