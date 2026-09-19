@@ -1,4 +1,4 @@
-name: Build HakanNovin APK V3.2
+name: Build HakanNovin APK
 
 on:
   workflow_dispatch:
@@ -6,2625 +6,523 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Java 17
+      - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: '17'
 
-      # ---------------------------------------------------------
-      # Create Android project
-      # ---------------------------------------------------------
-      - name: Create Android project
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: |
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Write HakanNovin project files
         shell: bash
         run: |
+          set -e
+          mkdir -p "$(dirname 'settings.gradle')"
+          cat <<'B64_201721' | base64 -d > "settings.gradle"
+          cGx1Z2luTWFuYWdlbWVudCB7IHJlcG9zaXRvcmllcyB7IGdvb2dsZSgpOyBtYXZlbkNlbnRyYWwoKTsgZ3JhZGxlUGx1Z2luUG9y
+          dGFsKCkgfSB9CmRlcGVuZGVuY3lSZXNvbHV0aW9uTWFuYWdlbWVudCB7IHJlcG9zaXRvcmllc01vZGUuc2V0KFJlcG9zaXRvcmll
+          c01vZGUuRkFJTF9PTl9QUk9KRUNUX1JFUE9TKTsgcmVwb3NpdG9yaWVzIHsgZ29vZ2xlKCk7IG1hdmVuQ2VudHJhbCgpIH0gfQpy
+          b290UHJvamVjdC5uYW1lPSdIYWthbk5vdmluJwppbmNsdWRlICc6YXBwJwo=
+          B64_201721
 
-          mkdir -p app/src/main/java/com/hakannovin/app
-          mkdir -p app/src/main/assets
-          mkdir -p app/src/main/res/values
+          mkdir -p "$(dirname 'gradle.properties')"
+          cat <<'B64_240237' | base64 -d > "gradle.properties"
+          b3JnLmdyYWRsZS5qdm1hcmdzPS1YbXgyMDQ4bSAtRGZpbGUuZW5jb2Rpbmc9VVRGLTgKYW5kcm9pZC51c2VBbmRyb2lkWD10cnVl
+          CmFuZHJvaWQubm9uVHJhbnNpdGl2ZVJDbGFzcz10cnVlCg==
+          B64_240237
 
-          cat > settings.gradle <<'EOF'
-          pluginManagement {
-              repositories {
-                  google()
-                  mavenCentral()
-                  gradlePluginPortal()
-              }
-          }
+          mkdir -p "$(dirname 'build.gradle')"
+          cat <<'B64_921565' | base64 -d > "build.gradle"
+          cGx1Z2lucyB7CiAgICBpZCAnY29tLmFuZHJvaWQuYXBwbGljYXRpb24nIHZlcnNpb24gJzguNi4xJyBhcHBseSBmYWxzZQp9Cg==
+          B64_921565
 
-          dependencyResolutionManagement {
-              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-          }
+          mkdir -p "$(dirname 'app/build.gradle')"
+          cat <<'B64_684829' | base64 -d > "app/build.gradle"
+          cGx1Z2lucyB7IGlkICdjb20uYW5kcm9pZC5hcHBsaWNhdGlvbicgfQoKYW5kcm9pZCB7CiAgICBuYW1lc3BhY2UgJ2NvbS5oYWth
+          bm5vdmluLmFwcCcKICAgIGNvbXBpbGVTZGsgMzUKICAgIGRlZmF1bHRDb25maWcgewogICAgICAgIGFwcGxpY2F0aW9uSWQgJ2Nv
+          bS5oYWthbm5vdmluLmFwcCcKICAgICAgICBtaW5TZGsgMjMKICAgICAgICB0YXJnZXRTZGsgMzUKICAgICAgICB2ZXJzaW9uQ29k
+          ZSA0MAogICAgICAgIHZlcnNpb25OYW1lICc0LjAuMCcKICAgIH0KfQo=
+          B64_684829
 
-          rootProject.name = "HakanNovin"
-          include(":app")
-          EOF
+          mkdir -p "$(dirname 'app/src/main/AndroidManifest.xml')"
+          cat <<'B64_228466' | base64 -d > "app/src/main/AndroidManifest.xml"
+          PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPG1hbmlmZXN0IHhtbG5zOmFuZHJvaWQ9Imh0dHA6Ly9zY2hl
+          bWFzLmFuZHJvaWQuY29tL2Fway9yZXMvYW5kcm9pZCI+CiAgICA8dXNlcy1wZXJtaXNzaW9uIGFuZHJvaWQ6bmFtZT0iYW5kcm9p
+          ZC5wZXJtaXNzaW9uLlNFTkRfU01TIiAvPgogICAgPHVzZXMtcGVybWlzc2lvbiBhbmRyb2lkOm5hbWU9ImFuZHJvaWQucGVybWlz
+          c2lvbi5SRUFEX1BIT05FX1NUQVRFIiAvPgogICAgPHVzZXMtcGVybWlzc2lvbiBhbmRyb2lkOm5hbWU9ImFuZHJvaWQucGVybWlz
+          c2lvbi5SRUNFSVZFX0JPT1RfQ09NUExFVEVEIiAvPgogICAgPHVzZXMtcGVybWlzc2lvbiBhbmRyb2lkOm5hbWU9ImFuZHJvaWQu
+          cGVybWlzc2lvbi5TQ0hFRFVMRV9FWEFDVF9BTEFSTSIgLz4KICAgIDxhcHBsaWNhdGlvbiBhbmRyb2lkOmljb249IkBkcmF3YWJs
+          ZS9pY19sYXVuY2hlciIgYW5kcm9pZDp0aGVtZT0iQHN0eWxlL0FwcFRoZW1lIiBhbmRyb2lkOmxhYmVsPSLZh9in2qnYp9mGINmG
+          2YjbjNmGIiBhbmRyb2lkOmFsbG93QmFja3VwPSJ0cnVlIiBhbmRyb2lkOnN1cHBvcnRzUnRsPSJ0cnVlIiBhbmRyb2lkOnVzZXND
+          bGVhcnRleHRUcmFmZmljPSJ0cnVlIj4KICAgICAgICA8YWN0aXZpdHkgYW5kcm9pZDpuYW1lPSIuTWFpbkFjdGl2aXR5IiBhbmRy
+          b2lkOnNjcmVlbk9yaWVudGF0aW9uPSJwb3J0cmFpdCIgYW5kcm9pZDpleHBvcnRlZD0idHJ1ZSI+CiAgICAgICAgICAgIDxpbnRl
+          bnQtZmlsdGVyPjxhY3Rpb24gYW5kcm9pZDpuYW1lPSJhbmRyb2lkLmludGVudC5hY3Rpb24uTUFJTiIvPjxjYXRlZ29yeSBhbmRy
+          b2lkOm5hbWU9ImFuZHJvaWQuaW50ZW50LmNhdGVnb3J5LkxBVU5DSEVSIi8+PC9pbnRlbnQtZmlsdGVyPgogICAgICAgIDwvYWN0
+          aXZpdHk+CiAgICAgICAgPHJlY2VpdmVyIGFuZHJvaWQ6bmFtZT0iLlNtc1JlbWluZGVyUmVjZWl2ZXIiIGFuZHJvaWQ6ZXhwb3J0
+          ZWQ9ImZhbHNlIiAvPgogICAgICAgIDxyZWNlaXZlciBhbmRyb2lkOm5hbWU9Ii5Cb290UmVjZWl2ZXIiIGFuZHJvaWQ6ZXhwb3J0
+          ZWQ9InRydWUiPjxpbnRlbnQtZmlsdGVyPjxhY3Rpb24gYW5kcm9pZDpuYW1lPSJhbmRyb2lkLmludGVudC5hY3Rpb24uQk9PVF9D
+          T01QTEVURUQiLz48L2ludGVudC1maWx0ZXI+PC9yZWNlaXZlcj4KICAgIDwvYXBwbGljYXRpb24+CjwvbWFuaWZlc3Q+Cg==
+          B64_228466
 
-          cat > build.gradle <<'EOF'
-          plugins {
-              id 'com.android.application' version '8.5.2' apply false
-          }
-          EOF
+          mkdir -p "$(dirname 'app/src/main/res/values/styles.xml')"
+          cat <<'B64_748673' | base64 -d > "app/src/main/res/values/styles.xml"
+          PHJlc291cmNlcz4KICAgIDxzdHlsZSBuYW1lPSJBcHBUaGVtZSIgcGFyZW50PSJhbmRyb2lkOnN0eWxlL1RoZW1lLk1hdGVyaWFs
+          LkxpZ2h0Lk5vQWN0aW9uQmFyIj4KICAgICAgICA8aXRlbSBuYW1lPSJhbmRyb2lkOmZvbnRGYW1pbHkiPnNhbnM8L2l0ZW0+CiAg
+          ICAgICAgPGl0ZW0gbmFtZT0iYW5kcm9pZDp3aW5kb3dMaWdodFN0YXR1c0JhciI+ZmFsc2U8L2l0ZW0+CiAgICAgICAgPGl0ZW0g
+          bmFtZT0iYW5kcm9pZDpzdGF0dXNCYXJDb2xvciI+IzA3NTk4NTwvaXRlbT4KICAgICAgICA8aXRlbSBuYW1lPSJhbmRyb2lkOm5h
+          dmlnYXRpb25CYXJDb2xvciI+IzA3MTkyMzwvaXRlbT4KICAgICAgICA8aXRlbSBuYW1lPSJhbmRyb2lkOndpbmRvd0FjdGlvbk1v
+          ZGVPdmVybGF5Ij50cnVlPC9pdGVtPgogICAgPC9zdHlsZT4KPC9yZXNvdXJjZXM+Cg==
+          B64_748673
 
-          cat > gradle.properties <<'EOF'
-          org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
-          android.useAndroidX=true
-          android.nonTransitiveRClass=true
-          EOF
+          mkdir -p "$(dirname 'app/src/main/res/drawable/ic_launcher.xml')"
+          cat <<'B64_693044' | base64 -d > "app/src/main/res/drawable/ic_launcher.xml"
+          PHZlY3RvciB4bWxuczphbmRyb2lkPSJodHRwOi8vc2NoZW1hcy5hbmRyb2lkLmNvbS9hcGsvcmVzL2FuZHJvaWQiIGFuZHJvaWQ6
+          d2lkdGg9IjEwOGRwIiBhbmRyb2lkOmhlaWdodD0iMTA4ZHAiIGFuZHJvaWQ6dmlld3BvcnRXaWR0aD0iMTA4IiBhbmRyb2lkOnZp
+          ZXdwb3J0SGVpZ2h0PSIxMDgiPjxwYXRoIGFuZHJvaWQ6ZmlsbENvbG9yPSIjMDYzQjQ2IiBhbmRyb2lkOnBhdGhEYXRhPSJNMCww
+          aDEwOHYxMDhoLTEwOHoiLz48cGF0aCBhbmRyb2lkOmZpbGxDb2xvcj0iIzEwQjlDMCIgYW5kcm9pZDpwYXRoRGF0YT0iTTU0LDEy
+          QzQxLDMxIDI2LDQ2IDI2LDY0YzAsMTcgMTIsMzAgMjgsMzBzMjgsLTEzIDI4LC0zMEM4Miw0NiA2NywzMSA1NCwxMnoiLz48cGF0
+          aCBhbmRyb2lkOmZpbGxDb2xvcj0iI0ZGRkZGRiIgYW5kcm9pZDpwYXRoRGF0YT0iTTU0LDI4QzQ3LDM5IDM4LDQ5IDM4LDYyYzAs
+          OSA3LDE3IDE2LDE4YzksLTEgMTYsLTkgMTYsLTE4QzcwLDQ5IDYxLDM5IDU0LDI4eiIvPjxwYXRoIGFuZHJvaWQ6ZmlsbENvbG9y
+          PSIjMDYzQjQ2IiBhbmRyb2lkOnBhdGhEYXRhPSJNNDMsNTRoMjJ2NUg0M3pNNDMsNjRoMjJ2NUg0M3oiLz48cGF0aCBhbmRyb2lk
+          OmZpbGxDb2xvcj0iIzEwQjlDMCIgYW5kcm9pZDpwYXRoRGF0YT0iTTQ5LDU0aDEwdjVINDl6TTQ5LDY0aDEwdjVINDl6Ii8+PC92
+          ZWN0b3I+
+          B64_693044
 
-          cat > app/build.gradle <<'EOF'
-          plugins {
-              id 'com.android.application'
-          }
+          mkdir -p "$(dirname 'app/src/main/res/xml/file_paths.xml')"
+          cat <<'B64_433230' | base64 -d > "app/src/main/res/xml/file_paths.xml"
+          PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPHBhdGhzIHhtbG5zOmFuZHJvaWQ9Imh0dHA6Ly9zY2hlbWFz
+          LmFuZHJvaWQuY29tL2Fway9yZXMvYW5kcm9pZCI+PGNhY2hlLXBhdGggbmFtZT0iY2FjaGUiIHBhdGg9Ii4iLz48L3BhdGhzPgo=
+          B64_433230
 
-          android {
-              namespace 'com.hakannovin.app'
-              compileSdk 35
+          mkdir -p "$(dirname 'app/src/main/java/com/hakannovin/app/MainActivity.java')"
+          cat <<'B64_311700' | base64 -d > "app/src/main/java/com/hakannovin/app/MainActivity.java"
+          cGFja2FnZSBjb20uaGFrYW5ub3Zpbi5hcHA7CgppbXBvcnQgYW5kcm9pZC5NYW5pZmVzdDtpbXBvcnQgYW5kcm9pZC5hcHAuKjtp
+          bXBvcnQgYW5kcm9pZC5jb250ZW50Lio7aW1wb3J0IGFuZHJvaWQuY29udGVudC5wbS5QYWNrYWdlTWFuYWdlcjtpbXBvcnQgYW5k
+          cm9pZC5uZXQuVXJpO2ltcG9ydCBhbmRyb2lkLm9zLio7aW1wb3J0IGFuZHJvaWQucHJvdmlkZXIuU2V0dGluZ3M7aW1wb3J0IGFu
+          ZHJvaWQudGVsZXBob255LlNtc01hbmFnZXI7aW1wb3J0IGFuZHJvaWQud2Via2l0Lio7aW1wb3J0IGFuZHJvaWQud2lkZ2V0LlRv
+          YXN0O2ltcG9ydCBqYXZhLmlvLio7aW1wb3J0IGphdmEudXRpbC4qO2ltcG9ydCBqYXZhLnV0aWwuemlwLio7aW1wb3J0IG9yZy54
+          bWxwdWxsLnYxLlhtbFB1bGxQYXJzZXI7aW1wb3J0IGFuZHJvaWQudXRpbC5YbWw7CgpwdWJsaWMgY2xhc3MgTWFpbkFjdGl2aXR5
+          IGV4dGVuZHMgQWN0aXZpdHkgewogc3RhdGljIGZpbmFsIGludCBSRVFfU01TPTQxLCBSRVFfRklMRT00MjsgV2ViVmlldyB3ZWI7
+          CiBAT3ZlcnJpZGUgcHVibGljIHZvaWQgb25DcmVhdGUoQnVuZGxlIGIpe3N1cGVyLm9uQ3JlYXRlKGIpOyBpZihCdWlsZC5WRVJT
+          SU9OLlNES19JTlQ+PTIzJiZjaGVja1NlbGZQZXJtaXNzaW9uKE1hbmlmZXN0LnBlcm1pc3Npb24uU0VORF9TTVMpIT1QYWNrYWdl
+          TWFuYWdlci5QRVJNSVNTSU9OX0dSQU5URUQpIHJlcXVlc3RQZXJtaXNzaW9ucyhuZXcgU3RyaW5nW117TWFuaWZlc3QucGVybWlz
+          c2lvbi5TRU5EX1NNU30sUkVRX1NNUyk7IHdlYj1uZXcgV2ViVmlldyh0aGlzKTsgd2ViLnNldEJhY2tncm91bmRDb2xvcigweGZm
+          ZjNmN2ZhKTsgV2ViU2V0dGluZ3Mgcz13ZWIuZ2V0U2V0dGluZ3MoKTtzLnNldEphdmFTY3JpcHRFbmFibGVkKHRydWUpO3Muc2V0
+          RG9tU3RvcmFnZUVuYWJsZWQodHJ1ZSk7cy5zZXRBbGxvd0ZpbGVBY2Nlc3ModHJ1ZSk7d2ViLmFkZEphdmFzY3JpcHRJbnRlcmZh
+          Y2UobmV3IEJyaWRnZSh0aGlzKSwiQW5kcm9pZCIpO3dlYi5sb2FkVXJsKCJmaWxlOi8vL2FuZHJvaWRfYXNzZXQvaW5kZXguaHRt
+          bCIpO3NldENvbnRlbnRWaWV3KHdlYik7fQogcHVibGljIHZvaWQgcGlja0V4Y2VsKCl7SW50ZW50IGk9bmV3IEludGVudChJbnRl
+          bnQuQUNUSU9OX09QRU5fRE9DVU1FTlQpO2kuc2V0VHlwZSgiYXBwbGljYXRpb24vdm5kLm9wZW54bWxmb3JtYXRzLW9mZmljZWRv
+          Y3VtZW50LnNwcmVhZHNoZWV0bWwuc2hlZXQiKTtpLmFkZENhdGVnb3J5KEludGVudC5DQVRFR09SWV9PUEVOQUJMRSk7c3RhcnRB
+          Y3Rpdml0eUZvclJlc3VsdChpLFJFUV9GSUxFKTt9CiBAT3ZlcnJpZGUgcHJvdGVjdGVkIHZvaWQgb25BY3Rpdml0eVJlc3VsdChp
+          bnQgcixpbnQgYyxJbnRlbnQgZCl7c3VwZXIub25BY3Rpdml0eVJlc3VsdChyLGMsZCk7aWYocj09UkVRX0ZJTEUmJmM9PVJFU1VM
+          VF9PSyYmZCE9bnVsbCl7dHJ5e1N0cmluZyBqc29uPVhsc3hJbXBvcnRlci5pbXBvcnRYbHN4KHRoaXMsZC5nZXREYXRhKCkpO3dl
+          Yi5ldmFsdWF0ZUphdmFzY3JpcHQoIndpbmRvdy5pbXBvcnRDdXN0b21lcnMoIitKU09OT2JqZWN0RXNjYXBlci5lc2NhcGUoanNv
+          bikrIikiLG51bGwpO31jYXRjaChFeGNlcHRpb24gZSl7VG9hc3QubWFrZVRleHQodGhpcywi2K7Yt9inINiv2LEg2K7ZiNin2YbY
+          r9mGIEV4Y2VsOiAiK2UuZ2V0TWVzc2FnZSgpLFRvYXN0LkxFTkdUSF9MT05HKS5zaG93KCk7fX19CiBzdGF0aWMgU3RyaW5nIGVz
+          YyhTdHJpbmcgcyl7cmV0dXJuIHMucmVwbGFjZSgiXFwiLCJcXFxcIikucmVwbGFjZSgiXCIiLCJcXFwiIikucmVwbGFjZSgiXG4i
+          LCJcXG4iKS5yZXBsYWNlKCJcciIsIlxcciIpO30KIHN0YXRpYyBjbGFzcyBKU09OT2JqZWN0RXNjYXBlcntzdGF0aWMgU3RyaW5n
+          IGVzY2FwZShTdHJpbmcgcyl7cmV0dXJuICJKU09OLnBhcnNlKFwiIitlc2MocykrIlwiKSI7fX0KIHB1YmxpYyBzdGF0aWMgdm9p
+          ZCBzY2hlZHVsZShDb250ZXh0IGMsU3RyaW5nIHBob25lLFN0cmluZyB0ZXh0LGxvbmcgd2hlbixTdHJpbmcga2V5KXtpZih3aGVu
+          PD1TeXN0ZW0uY3VycmVudFRpbWVNaWxsaXMoKSlyZXR1cm47SW50ZW50IGk9bmV3IEludGVudChjLFNtc1JlbWluZGVyUmVjZWl2
+          ZXIuY2xhc3MpLnNldEFjdGlvbigiY29tLmhha2Fubm92aW4uU01TIikucHV0RXh0cmEoInBob25lIixwaG9uZSkucHV0RXh0cmEo
+          InRleHQiLHRleHQpLnB1dEV4dHJhKCJrZXkiLGtleSk7UGVuZGluZ0ludGVudCBwaT1QZW5kaW5nSW50ZW50LmdldEJyb2FkY2Fz
+          dChjLGtleS5oYXNoQ29kZSgpLGksUGVuZGluZ0ludGVudC5GTEFHX1VQREFURV9DVVJSRU5UfFBlbmRpbmdJbnRlbnQuRkxBR19J
+          TU1VVEFCTEUpO0FsYXJtTWFuYWdlciBhbT0oQWxhcm1NYW5hZ2VyKWMuZ2V0U3lzdGVtU2VydmljZShBTEFSTV9TRVJWSUNFKTtp
+          ZihCdWlsZC5WRVJTSU9OLlNES19JTlQ+PTIzKWFtLnNldEFuZEFsbG93V2hpbGVJZGxlKEFsYXJtTWFuYWdlci5SVENfV0FLRVVQ
+          LHdoZW4scGkpO2Vsc2UgYW0uc2V0KEFsYXJtTWFuYWdlci5SVENfV0FLRVVQLHdoZW4scGkpO30KIHB1YmxpYyBzdGF0aWMgdm9p
+          ZCByZXNjaGVkdWxlQWxsKENvbnRleHQgYyl7IH0KIHB1YmxpYyBjbGFzcyBCcmlkZ2Uge0NvbnRleHQgYztCcmlkZ2UoQ29udGV4
+          dCB4KXtjPXg7fUBKYXZhc2NyaXB0SW50ZXJmYWNlIHB1YmxpYyB2b2lkIGltcG9ydEV4Y2VsKCl7cGlja0V4Y2VsKCk7fUBKYXZh
+          c2NyaXB0SW50ZXJmYWNlIHB1YmxpYyB2b2lkIHNlbmRTbXMoU3RyaW5nIHBob25lLFN0cmluZyB0ZXh0KXt0cnl7U21zTWFuYWdl
+          ci5nZXREZWZhdWx0KCkuc2VuZFRleHRNZXNzYWdlKHBob25lLG51bGwsdGV4dCxudWxsLG51bGwpO1RvYXN0Lm1ha2VUZXh0KGMs
+          Itm+24zYp9mF2qkg2KfYsdiz2KfZhCDYtNivIixUb2FzdC5MRU5HVEhfU0hPUlQpLnNob3coKTt9Y2F0Y2goRXhjZXB0aW9uIGUp
+          e1RvYXN0Lm1ha2VUZXh0KGMsItin2LHYs9in2YQg2YbYtNivOiAiK2UuZ2V0TWVzc2FnZSgpLFRvYXN0LkxFTkdUSF9MT05HKS5z
+          aG93KCk7fX1ASmF2YXNjcmlwdEludGVyZmFjZSBwdWJsaWMgdm9pZCBzY2hlZHVsZVNtcyhTdHJpbmcgcGhvbmUsU3RyaW5nIHRl
+          eHQsbG9uZyB3aGVuLFN0cmluZyBrZXkpe3NjaGVkdWxlKGMscGhvbmUsdGV4dCx3aGVuLGtleSk7fUBKYXZhc2NyaXB0SW50ZXJm
+          YWNlIHB1YmxpYyBib29sZWFuIGNhbkV4YWN0KCl7cmV0dXJuIEJ1aWxkLlZFUlNJT04uU0RLX0lOVDwzMXx8KChBbGFybU1hbmFn
+          ZXIpYy5nZXRTeXN0ZW1TZXJ2aWNlKEFMQVJNX1NFUlZJQ0UpKS5jYW5TY2hlZHVsZUV4YWN0QWxhcm1zKCk7fX0KfQo=
+          B64_311700
 
-              defaultConfig {
-                  applicationId "com.hakannovin.app"
-                  minSdk 23
-                  targetSdk 35
-                  versionCode 32
-                  versionName "3.2"
-              }
-          }
-          EOF
+          mkdir -p "$(dirname 'app/src/main/java/com/hakannovin/app/XlsxImporter.java')"
+          cat <<'B64_740923' | base64 -d > "app/src/main/java/com/hakannovin/app/XlsxImporter.java"
+          cGFja2FnZSBjb20uaGFrYW5ub3Zpbi5hcHA7CmltcG9ydCBhbmRyb2lkLmNvbnRlbnQuKjtpbXBvcnQgYW5kcm9pZC5uZXQuVXJp
+          O2ltcG9ydCBqYXZhLmlvLio7aW1wb3J0IGphdmEudXRpbC4qO2ltcG9ydCBqYXZhLnV0aWwuemlwLio7aW1wb3J0IG9yZy54bWxw
+          dWxsLnYxLio7aW1wb3J0IGFuZHJvaWQudXRpbC5YbWw7CnB1YmxpYyBjbGFzcyBYbHN4SW1wb3J0ZXIgewogc3RhdGljIFN0cmlu
+          ZyBlc2MoU3RyaW5nIHMpe3JldHVybiBNYWluQWN0aXZpdHkuZXNjKHM9PW51bGw/IiI6cyk7fQogc3RhdGljIFN0cmluZyBhbGxU
+          ZXh0KFhtbFB1bGxQYXJzZXIgcCl0aHJvd3MgRXhjZXB0aW9ue1N0cmluZ0J1aWxkZXIgYj1uZXcgU3RyaW5nQnVpbGRlcigpO2lu
+          dCBkZXB0aD0wO3doaWxlKHAubmV4dCgpIT1YbWxQdWxsUGFyc2VyLkVORF9ET0NVTUVOVCl7aW50IGU9cC5nZXRFdmVudFR5cGUo
+          KTtpZihlPT1YbWxQdWxsUGFyc2VyLlNUQVJUX1RBRyl7ZGVwdGgrKzt9ZWxzZSBpZihlPT1YbWxQdWxsUGFyc2VyLlRFWFQpYi5h
+          cHBlbmQocC5nZXRUZXh0KCkpO2Vsc2UgaWYoZT09WG1sUHVsbFBhcnNlci5FTkRfVEFHKXtkZXB0aC0tO2lmKGRlcHRoPD0wKWJy
+          ZWFrO319cmV0dXJuIGIudG9TdHJpbmcoKTt9CiBzdGF0aWMgTWFwPFN0cmluZyxieXRlW10+IHVuemlwKENvbnRleHQgYyxVcmkg
+          dXJpKXRocm93cyBFeGNlcHRpb257TWFwPFN0cmluZyxieXRlW10+IG09bmV3IEhhc2hNYXA8PigpO1ppcElucHV0U3RyZWFtIHo9
+          bmV3IFppcElucHV0U3RyZWFtKGMuZ2V0Q29udGVudFJlc29sdmVyKCkub3BlbklucHV0U3RyZWFtKHVyaSkpO1ppcEVudHJ5IGU7
+          Ynl0ZVtdIGJ1Zj1uZXcgYnl0ZVs4MTkyXTt3aGlsZSgoZT16LmdldE5leHRFbnRyeSgpKSE9bnVsbCl7Qnl0ZUFycmF5T3V0cHV0
+          U3RyZWFtIG89bmV3IEJ5dGVBcnJheU91dHB1dFN0cmVhbSgpO2ludCBuO3doaWxlKChuPXoucmVhZChidWYpKT4wKW8ud3JpdGUo
+          YnVmLDAsbik7bS5wdXQoZS5nZXROYW1lKCksby50b0J5dGVBcnJheSgpKTt9ei5jbG9zZSgpO3JldHVybiBtO30KIHN0YXRpYyBM
+          aXN0PFN0cmluZz4gc2hhcmVkKE1hcDxTdHJpbmcsYnl0ZVtdPiBmKXRocm93cyBFeGNlcHRpb257TGlzdDxTdHJpbmc+IG91dD1u
+          ZXcgQXJyYXlMaXN0PD4oKTtieXRlW10gYj1mLmdldCgieGwvc2hhcmVkU3RyaW5ncy54bWwiKTtpZihiPT1udWxsKXJldHVybiBv
+          dXQ7WG1sUHVsbFBhcnNlciBwPVhtbC5uZXdQdWxsUGFyc2VyKCk7cC5zZXRJbnB1dChuZXcgQnl0ZUFycmF5SW5wdXRTdHJlYW0o
+          YiksIlVURi04Iik7d2hpbGUocC5uZXh0KCkhPVhtbFB1bGxQYXJzZXIuRU5EX0RPQ1VNRU5UKXtpZihwLmdldEV2ZW50VHlwZSgp
+          PT1YbWxQdWxsUGFyc2VyLlNUQVJUX1RBRyYmcC5nZXROYW1lKCkuZXF1YWxzKCJzaSIpKXtTdHJpbmdCdWlsZGVyIHM9bmV3IFN0
+          cmluZ0J1aWxkZXIoKTtpbnQgZGVwPTE7d2hpbGUoZGVwPjAmJnAubmV4dCgpIT1YbWxQdWxsUGFyc2VyLkVORF9ET0NVTUVOVCl7
+          aWYocC5nZXRFdmVudFR5cGUoKT09WG1sUHVsbFBhcnNlci5TVEFSVF9UQUcpZGVwKys7ZWxzZSBpZihwLmdldEV2ZW50VHlwZSgp
+          PT1YbWxQdWxsUGFyc2VyLkVORF9UQUcpZGVwLS07ZWxzZSBpZihwLmdldEV2ZW50VHlwZSgpPT1YbWxQdWxsUGFyc2VyLlRFWFQp
+          cy5hcHBlbmQocC5nZXRUZXh0KCkpO31vdXQuYWRkKHMudG9TdHJpbmcoKSk7fX1yZXR1cm4gb3V0O30KIHN0YXRpYyBMaXN0PFN0
+          cmluZ1tdPiBzaGVldHMoTWFwPFN0cmluZyxieXRlW10+IGYsTGlzdDxTdHJpbmc+IG5hbWVzKXRocm93cyBFeGNlcHRpb257CiAg
+          IExpc3Q8U3RyaW5nW10+IGxpc3Q9bmV3IEFycmF5TGlzdDw+KCk7IGJ5dGVbXSB3Yj1mLmdldCgieGwvd29ya2Jvb2sueG1sIiks
+          IHJlbD1mLmdldCgieGwvX3JlbHMvd29ya2Jvb2sueG1sLnJlbHMiKTsgaWYod2I9PW51bGwpdGhyb3cgbmV3IElPRXhjZXB0aW9u
+          KCJ3b3JrYm9vayDZvtuM2K/YpyDZhti02K8iKTsKICAgTWFwPFN0cmluZyxTdHJpbmc+IHJlbHM9bmV3IEhhc2hNYXA8PigpOyBp
+          ZihyZWwhPW51bGwpe1htbFB1bGxQYXJzZXIgcD1YbWwubmV3UHVsbFBhcnNlcigpO3Auc2V0SW5wdXQobmV3IEJ5dGVBcnJheUlu
+          cHV0U3RyZWFtKHJlbCksIlVURi04Iik7d2hpbGUocC5uZXh0KCkhPVhtbFB1bGxQYXJzZXIuRU5EX0RPQ1VNRU5UKXtpZihwLmdl
+          dEV2ZW50VHlwZSgpPT1YbWxQdWxsUGFyc2VyLlNUQVJUX1RBRyYmcC5nZXROYW1lKCkuZXF1YWxzKCJSZWxhdGlvbnNoaXAiKSl7
+          cmVscy5wdXQocC5nZXRBdHRyaWJ1dGVWYWx1ZShudWxsLCJJZCIpLHAuZ2V0QXR0cmlidXRlVmFsdWUobnVsbCwiVGFyZ2V0Iikp
+          O319fQogICBYbWxQdWxsUGFyc2VyIHA9WG1sLm5ld1B1bGxQYXJzZXIoKTtwLnNldElucHV0KG5ldyBCeXRlQXJyYXlJbnB1dFN0
+          cmVhbSh3YiksIlVURi04Iik7d2hpbGUocC5uZXh0KCkhPVhtbFB1bGxQYXJzZXIuRU5EX0RPQ1VNRU5UKXtpZihwLmdldEV2ZW50
+          VHlwZSgpPT1YbWxQdWxsUGFyc2VyLlNUQVJUX1RBRyYmcC5nZXROYW1lKCkuZXF1YWxzKCJzaGVldCIpKXtTdHJpbmcgbmFtZT1w
+          LmdldEF0dHJpYnV0ZVZhbHVlKG51bGwsIm5hbWUiKSxyaWQ9cC5nZXRBdHRyaWJ1dGVWYWx1ZSgiaHR0cDovL3NjaGVtYXMub3Bl
+          bnhtbGZvcm1hdHMub3JnL29mZmljZURvY3VtZW50LzIwMDYvcmVsYXRpb25zaGlwcyIsImlkIik7aWYocmlkPT1udWxsKXJpZD1w
+          LmdldEF0dHJpYnV0ZVZhbHVlKG51bGwsInI6aWQiKTtTdHJpbmcgdGFyZ2V0PXJlbHMuZ2V0KHJpZCk7aWYodGFyZ2V0IT1udWxs
+          KXtpZih0YXJnZXQuc3RhcnRzV2l0aCgiLyIpKXRhcmdldD10YXJnZXQuc3Vic3RyaW5nKDEpO2Vsc2UgaWYodGFyZ2V0LnN0YXJ0
+          c1dpdGgoIi4uLyIpKXRhcmdldD10YXJnZXQuc3Vic3RyaW5nKDMpO2Vsc2UgdGFyZ2V0PSJ4bC8iK3RhcmdldC5yZXBsYWNlRmly
+          c3QoIl54bC8iLCIiKTtuYW1lcy5hZGQobmFtZSk7bGlzdC5hZGQobmV3IFN0cmluZ1tde25hbWUsdGFyZ2V0fSk7fX19CiAgIHJl
+          dHVybiBsaXN0OwogfQogc3RhdGljIExpc3Q8TGlzdDxTdHJpbmc+PiByZWFkU2hlZXQoYnl0ZVtdIGIsTGlzdDxTdHJpbmc+IHNo
+          KXRocm93cyBFeGNlcHRpb257TGlzdDxMaXN0PFN0cmluZz4+IHJvd3M9bmV3IEFycmF5TGlzdDw+KCk7aWYoYj09bnVsbClyZXR1
+          cm4gcm93cztYbWxQdWxsUGFyc2VyIHA9WG1sLm5ld1B1bGxQYXJzZXIoKTtwLnNldElucHV0KG5ldyBCeXRlQXJyYXlJbnB1dFN0
+          cmVhbShiKSwiVVRGLTgiKTtMaXN0PFN0cmluZz4gcm93PW51bGw7aW50IGNvbD0wO1N0cmluZyB0eXBlPW51bGwsdmFsPSIiO3do
+          aWxlKHAubmV4dCgpIT1YbWxQdWxsUGFyc2VyLkVORF9ET0NVTUVOVCl7aW50IGV2PXAuZ2V0RXZlbnRUeXBlKCk7aWYoZXY9PVht
+          bFB1bGxQYXJzZXIuU1RBUlRfVEFHKXtTdHJpbmcgbj1wLmdldE5hbWUoKTtpZihuLmVxdWFscygicm93Iikpe3Jvdz1uZXcgQXJy
+          YXlMaXN0PD4oKTtjb2w9MDt9ZWxzZSBpZihuLmVxdWFscygiYyIpKXtTdHJpbmcgcmVmPXAuZ2V0QXR0cmlidXRlVmFsdWUobnVs
+          bCwiciIpO3R5cGU9cC5nZXRBdHRyaWJ1dGVWYWx1ZShudWxsLCJ0Iik7aWYocmVmIT1udWxsKXtpbnQgaz0wO3doaWxlKGs8cmVm
+          Lmxlbmd0aCgpJiZDaGFyYWN0ZXIuaXNMZXR0ZXIocmVmLmNoYXJBdChrKSkpaysrO1N0cmluZyBsZXR0ZXJzPXJlZi5zdWJzdHJp
+          bmcoMCxrKTtjb2w9MDtmb3IoY2hhciBjaDpsZXR0ZXJzLnRvQ2hhckFycmF5KCkpY29sPWNvbCoyNisoY2gtJ0EnKzEpO2NvbC0t
+          O3doaWxlKHJvdy5zaXplKCk8Y29sKXJvdy5hZGQoIiIpO319ZWxzZSBpZihuLmVxdWFscygidiIpfHxuLmVxdWFscygidCIpKXt2
+          YWw9YWxsVGV4dChwKTt9fWVsc2UgaWYoZXY9PVhtbFB1bGxQYXJzZXIuRU5EX1RBRyl7U3RyaW5nIG49cC5nZXROYW1lKCk7aWYo
+          bi5lcXVhbHMoImMiKSl7U3RyaW5nIHY9dmFsO2lmKCJzIi5lcXVhbHModHlwZSkpe3RyeXt2PXNoLmdldChJbnRlZ2VyLnBhcnNl
+          SW50KHZhbCkpO31jYXRjaChFeGNlcHRpb24gaWdub3JlZCl7fX13aGlsZShyb3cuc2l6ZSgpPD1jb2wpcm93LmFkZCgiIik7cm93
+          LnNldChjb2wsdik7dmFsPSIiO3R5cGU9bnVsbDt9ZWxzZSBpZihuLmVxdWFscygicm93Iikpe3Jvd3MuYWRkKHJvdyk7cm93PW51
+          bGw7fX19cmV0dXJuIHJvd3M7fQogc3RhdGljIFN0cmluZyBub3JtKFN0cmluZyBzKXtyZXR1cm4gKHM9PW51bGw/IiI6cykudHJp
+          bSgpLnJlcGxhY2UoJ9mKJywn24wnKS5yZXBsYWNlKCfZiScsJ9uMJykucmVwbGFjZSgn2YMnLCfaqScpLnJlcGxhY2UoJ9mlJywn
+          27UnKS5yZXBsYWNlKCfZpicsJ9u2JykucmVwbGFjZUFsbCgiXFxzKyIsIiAiKTt9CiBwdWJsaWMgc3RhdGljIFN0cmluZyBpbXBv
+          cnRYbHN4KENvbnRleHQgYyxVcmkgdXJpKXRocm93cyBFeGNlcHRpb257TWFwPFN0cmluZyxieXRlW10+IGY9dW56aXAoYyx1cmkp
+          O0xpc3Q8U3RyaW5nPiBzaD1zaGFyZWQoZiksbmFtZXM9bmV3IEFycmF5TGlzdDw+KCk7TGlzdDxTdHJpbmdbXT4gdGFicz1zaGVl
+          dHMoZixuYW1lcyk7aWYodGFicy5pc0VtcHR5KCkpdGhyb3cgbmV3IElPRXhjZXB0aW9uKCLZh9uM2oYg2LTbjNiq24wg2b7bjNiv
+          2Kcg2YbYtNivIik7U3RyaW5nW10gYmVzdD1udWxsO0xpc3Q8TGlzdDxTdHJpbmc+PiBiZXN0Um93cz1udWxsO2ludCBiZXN0U2Nv
+          cmU9LTE7Zm9yKFN0cmluZ1tdIHRhYjp0YWJzKXtMaXN0PExpc3Q8U3RyaW5nPj4gcm93cz1yZWFkU2hlZXQoZi5nZXQodGFiWzFd
+          KSxzaCk7Zm9yKGludCBoaT0wO2hpPE1hdGgubWluKHJvd3Muc2l6ZSgpLDE1KTtoaSsrKXtpbnQgc2NvcmU9MDtmb3IoU3RyaW5n
+          IGg6cm93cy5nZXQoaGkpKXtTdHJpbmcgbj1ub3JtKGgpO2lmKG4uZXF1YWxzKCLZhtin2YUg2Ygg2YbYp9mFINiu2KfZhtmI2KfY
+          r9qv24wiKXx8bi5lcXVhbHMoItmG2KfZhSDZhdi02KrYsduMIil8fG4uZXF1YWxzKCLZhtin2YUiKSlzY29yZSs9NTtpZihuLmVx
+          dWFscygi2LTZhdin2LHZhyDYqtmF2KfYsyIpfHxuLmVxdWFscygi2LTZhdin2LHZhyDYqtmE2YHZhiIpfHxuLmVxdWFscygi2KrZ
+          hNmB2YYiKSlzY29yZSs9NTtpZihuLmVxdWFscygi2KLYr9ix2LMiKSlzY29yZSs9Mzt9aWYobm9ybSh0YWJbMF0pLmVxdWFscygi
+          2YXYtNiq2LHZiiIpKXNjb3JlKz0xMDA7aWYobm9ybSh0YWJbMF0pLmVxdWFscygi2YfYp9qp2KfZhiDZhtmI24zZhiIpKXNjb3Jl
+          Kz05MDtpZihzY29yZT5iZXN0U2NvcmUpe2Jlc3RTY29yZT1zY29yZTtiZXN0PW5ldyBTdHJpbmdbXXt0YWJbMF0sU3RyaW5nLnZh
+          bHVlT2YoaGkpfTtiZXN0Um93cz1yb3dzO319fWlmKGJlc3RTY29yZTw1KXRocm93IG5ldyBJT0V4Y2VwdGlvbigi2LTbjNiqINmF
+          2LTYqtix24wg2b7bjNiv2Kcg2YbYtNivIik7aW50IGhpPUludGVnZXIucGFyc2VJbnQoYmVzdFsxXSk7TGlzdDxTdHJpbmc+IGhl
+          YWRlcnM9YmVzdFJvd3MuZ2V0KGhpKTtTdHJpbmdCdWlsZGVyIG91dD1uZXcgU3RyaW5nQnVpbGRlcigiWyIpO2ZvcihpbnQgcj1o
+          aSsxO3I8YmVzdFJvd3Muc2l6ZSgpO3IrKyl7TGlzdDxTdHJpbmc+YT1iZXN0Um93cy5nZXQocik7Ym9vbGVhbiBhbnk9ZmFsc2U7
+          Zm9yKFN0cmluZyB2OmEpaWYodiE9bnVsbCYmIXYudHJpbSgpLmlzRW1wdHkoKSl7YW55PXRydWU7YnJlYWs7fWlmKCFhbnkpY29u
+          dGludWU7b3V0LmFwcGVuZCgieyIpO2ZvcihpbnQgaj0wO2o8aGVhZGVycy5zaXplKCk7aisrKXtpZihqPjApb3V0LmFwcGVuZCgn
+          LCcpO291dC5hcHBlbmQoJyInKS5hcHBlbmQoZXNjKGhlYWRlcnMuZ2V0KGopKSkuYXBwZW5kKCJcIjpcIiIpLmFwcGVuZChlc2Mo
+          ajxhLnNpemUoKT9hLmdldChqKToiIikpLmFwcGVuZCgnIicpO31vdXQuYXBwZW5kKCJ9LCIpO31pZihvdXQuY2hhckF0KG91dC5s
+          ZW5ndGgoKS0xKT09JywnKW91dC5kZWxldGVDaGFyQXQob3V0Lmxlbmd0aCgpLTEpO291dC5hcHBlbmQoJ10nKTtyZXR1cm4gb3V0
+          LnRvU3RyaW5nKCk7fQp9Cg==
+          B64_740923
 
-          cat > app/src/main/res/values/strings.xml <<'EOF'
-          <resources>
-              <string name="app_name">هاکان نوین</string>
-          </resources>
-          EOF
+          mkdir -p "$(dirname 'app/src/main/java/com/hakannovin/app/SmsReminderReceiver.java')"
+          cat <<'B64_894587' | base64 -d > "app/src/main/java/com/hakannovin/app/SmsReminderReceiver.java"
+          cGFja2FnZSBjb20uaGFrYW5ub3Zpbi5hcHA7CgppbXBvcnQgYW5kcm9pZC5jb250ZW50LkJyb2FkY2FzdFJlY2VpdmVyOwppbXBv
+          cnQgYW5kcm9pZC5jb250ZW50LkNvbnRleHQ7CmltcG9ydCBhbmRyb2lkLmNvbnRlbnQuSW50ZW50OwppbXBvcnQgYW5kcm9pZC5j
+          b250ZW50LlNoYXJlZFByZWZlcmVuY2VzOwppbXBvcnQgYW5kcm9pZC50ZWxlcGhvbnkuU21zTWFuYWdlcjsKaW1wb3J0IGFuZHJv
+          aWQub3MuQnVuZGxlOwppbXBvcnQgYW5kcm9pZC53aWRnZXQuVG9hc3Q7CgpwdWJsaWMgY2xhc3MgU21zUmVtaW5kZXJSZWNlaXZl
+          ciBleHRlbmRzIEJyb2FkY2FzdFJlY2VpdmVyIHsKICAgIEBPdmVycmlkZSBwdWJsaWMgdm9pZCBvblJlY2VpdmUoQ29udGV4dCBj
+          b250ZXh0LCBJbnRlbnQgaW50ZW50KSB7CiAgICAgICAgaWYgKCEiY29tLmhha2Fubm92aW4uU01TIi5lcXVhbHMoaW50ZW50Lmdl
+          dEFjdGlvbigpKSkgcmV0dXJuOwogICAgICAgIFN0cmluZyBwaG9uZT1pbnRlbnQuZ2V0U3RyaW5nRXh0cmEoInBob25lIik7CiAg
+          ICAgICAgU3RyaW5nIHRleHQ9aW50ZW50LmdldFN0cmluZ0V4dHJhKCJ0ZXh0Iik7CiAgICAgICAgU3RyaW5nIGtleT1pbnRlbnQu
+          Z2V0U3RyaW5nRXh0cmEoImtleSIpOwogICAgICAgIGlmKHBob25lPT1udWxsfHx0ZXh0PT1udWxsfHxwaG9uZS50cmltKCkuaXNF
+          bXB0eSgpKSByZXR1cm47CiAgICAgICAgU2hhcmVkUHJlZmVyZW5jZXMgcD1jb250ZXh0LmdldFNoYXJlZFByZWZlcmVuY2VzKCJo
+          YWthbiIsQ29udGV4dC5NT0RFX1BSSVZBVEUpOwogICAgICAgIGlmKGtleSE9bnVsbCAmJiBwLmdldEJvb2xlYW4oInNlbnRfIitr
+          ZXksZmFsc2UpKSByZXR1cm47CiAgICAgICAgdHJ5IHsKICAgICAgICAgICAgU21zTWFuYWdlci5nZXREZWZhdWx0KCkuc2VuZFRl
+          eHRNZXNzYWdlKHBob25lLG51bGwsdGV4dCxudWxsLG51bGwpOwogICAgICAgICAgICBpZihrZXkhPW51bGwpIHAuZWRpdCgpLnB1
+          dEJvb2xlYW4oInNlbnRfIitrZXksdHJ1ZSkuYXBwbHkoKTsKICAgICAgICB9IGNhdGNoKEV4Y2VwdGlvbiBlKSB7IFRvYXN0Lm1h
+          a2VUZXh0KGNvbnRleHQsItin2LHYs9in2YQg2b7bjNin2YXaqSDYp9mG2KzYp9mFINmG2LTYrzogIitlLmdldE1lc3NhZ2UoKSxU
+          b2FzdC5MRU5HVEhfTE9ORykuc2hvdygpOyB9CiAgICB9Cn0K
+          B64_894587
 
-          cat > app/src/main/res/values/styles.xml <<'EOF'
-          <resources>
+          mkdir -p "$(dirname 'app/src/main/java/com/hakannovin/app/BootReceiver.java')"
+          cat <<'B64_464758' | base64 -d > "app/src/main/java/com/hakannovin/app/BootReceiver.java"
+          cGFja2FnZSBjb20uaGFrYW5ub3Zpbi5hcHA7CmltcG9ydCBhbmRyb2lkLmNvbnRlbnQuKjsKcHVibGljIGNsYXNzIEJvb3RSZWNl
+          aXZlciBleHRlbmRzIEJyb2FkY2FzdFJlY2VpdmVyIHsKIEBPdmVycmlkZSBwdWJsaWMgdm9pZCBvblJlY2VpdmUoQ29udGV4dCBj
+          LCBJbnRlbnQgaSl7IGlmKEludGVudC5BQ1RJT05fQk9PVF9DT01QTEVURUQuZXF1YWxzKGkuZ2V0QWN0aW9uKCkpKSBNYWluQWN0
+          aXZpdHkucmVzY2hlZHVsZUFsbChjKTsgfQp9Cg==
+          B64_464758
 
-              <style name="AppTheme"
-                  parent="android:style/Theme.Material.Light.NoActionBar">
+          mkdir -p "$(dirname 'app/src/main/assets/index.html')"
+          cat <<'B64_415415' | base64 -d > "app/src/main/assets/index.html"
+          PCFkb2N0eXBlIGh0bWw+PGh0bWwgbGFuZz0iZmEiIGRpcj0icnRsIj48aGVhZD48bWV0YSBjaGFyc2V0PSJ1dGYtOCI+PG1ldGEg
+          bmFtZT0idmlld3BvcnQiIGNvbnRlbnQ9IndpZHRoPWRldmljZS13aWR0aCxpbml0aWFsLXNjYWxlPTEiPjxtZXRhIG5hbWU9InRo
+          ZW1lLWNvbG9yIiBjb250ZW50PSIjMDYzQjQ2Ij48dGl0bGU+2YfYp9qp2KfZhiDZhtmI24zZhjwvdGl0bGU+PHN0eWxlPgoqe2Jv
+          eC1zaXppbmc6Ym9yZGVyLWJveH1ib2R5e21hcmdpbjowO2JhY2tncm91bmQ6I2YzZjhmOTtjb2xvcjojMTczNDNhO2ZvbnQtZmFt
+          aWx5OlRhaG9tYSxBcmlhbCxzYW5zLXNlcmlmfWhlYWRlcntiYWNrZ3JvdW5kOmxpbmVhci1ncmFkaWVudCgxNDVkZWcsIzA2M2I0
+          NiwjMDg3ZjhjLCMxMGE2YTApO2NvbG9yOiNmZmY7cGFkZGluZzoyMnB4IDE2cHggMzBweDtib3JkZXItcmFkaXVzOjAgMCAyOHB4
+          IDI4cHh9LmJyYW5ke2Rpc3BsYXk6ZmxleDthbGlnbi1pdGVtczpjZW50ZXI7Z2FwOjEycHh9LmxvZ297d2lkdGg6NThweDtoZWln
+          aHQ6NThweDtib3JkZXItcmFkaXVzOjE4cHg7YmFja2dyb3VuZDojZmZmZmZmMjA7ZGlzcGxheTpncmlkO3BsYWNlLWl0ZW1zOmNl
+          bnRlcjtmb250LXNpemU6MzFweH0udGl0bGV7Zm9udC1zaXplOjI0cHg7Zm9udC13ZWlnaHQ6OTAwfS5zdWJ7Zm9udC1zaXplOjEy
+          cHg7b3BhY2l0eTouOTttYXJnaW4tdG9wOjRweH1tYWlue21heC13aWR0aDo5MDBweDttYXJnaW46YXV0bztwYWRkaW5nOjE0cHh9
+          LnN0YXRze2Rpc3BsYXk6Z3JpZDtncmlkLXRlbXBsYXRlLWNvbHVtbnM6cmVwZWF0KDQsMWZyKTtnYXA6OXB4O21hcmdpbi10b3A6
+          LTE4cHh9LmNhcmR7YmFja2dyb3VuZDojZmZmO2JvcmRlci1yYWRpdXM6MThweDtwYWRkaW5nOjEzcHg7dGV4dC1hbGlnbjpjZW50
+          ZXI7Ym94LXNoYWRvdzowIDVweCAxOHB4ICMxNzM0M2ExMn0ubnVte2ZvbnQtc2l6ZToyMnB4O2ZvbnQtd2VpZ2h0OjkwMDtjb2xv
+          cjojMDg3ZjhjfS5sYmx7Zm9udC1zaXplOjExcHg7Y29sb3I6IzcwODI4NzttYXJnaW4tdG9wOjNweH0ubWVudXtkaXNwbGF5Omdy
+          aWQ7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOjFmciAxZnI7Z2FwOjlweDttYXJnaW46MTNweCAwfS5idG57Ym9yZGVyOjA7Ym9yZGVy
+          LXJhZGl1czoxM3B4O3BhZGRpbmc6MTNweDtmb250OmluaGVyaXQ7Zm9udC13ZWlnaHQ6ODAwfS5wcmltYXJ5e2JhY2tncm91bmQ6
+          IzA4N2Y4Yztjb2xvcjojZmZmfS5saWdodHtiYWNrZ3JvdW5kOiNlNGY0ZjU7Y29sb3I6IzA3NWI2N30ud2FybntiYWNrZ3JvdW5k
+          OiNmZmYwZDg7Y29sb3I6IzhhNTkwMH0uZGFuZ2Vye2JhY2tncm91bmQ6I2ZmZTdlOTtjb2xvcjojYTUxZDMyfS5zZWN0aW9ue2Jh
+          Y2tncm91bmQ6I2ZmZjtib3JkZXItcmFkaXVzOjE4cHg7cGFkZGluZzoxNHB4O21hcmdpbjoxMHB4IDA7Ym94LXNoYWRvdzowIDRw
+          eCAxNXB4ICMxNzM0M2EwYX0uc2VjdGlvbiBoMntmb250LXNpemU6MTZweDttYXJnaW46MCAwIDEwcHh9aW5wdXQsdGV4dGFyZWEs
+          c2VsZWN0e3dpZHRoOjEwMCU7cGFkZGluZzoxMnB4O2JvcmRlcjoxcHggc29saWQgI2Q4ZTVlNztib3JkZXItcmFkaXVzOjEycHg7
+          Zm9udDppbmhlcml0O21hcmdpbjo0cHggMDtiYWNrZ3JvdW5kOiNmZmZ9dGV4dGFyZWF7bWluLWhlaWdodDo4MHB4fS5oaWRkZW57
+          ZGlzcGxheTpub25lfS5jdXN0b21lcntiYWNrZ3JvdW5kOiNmZmY7Ym9yZGVyLXJhZGl1czoxN3B4O3BhZGRpbmc6MTRweDttYXJn
+          aW46OHB4IDA7Ym9yZGVyLXJpZ2h0OjRweCBzb2xpZCAjMGE4YjkxO2JveC1zaGFkb3c6MCAzcHggMTNweCAjMTczNDNhMGJ9LmN1
+          c3RvbWVyLm92ZXJ7Ym9yZGVyLXJpZ2h0LWNvbG9yOiNkMTJkNDN9LmN1c3RvbWVyLnRvZGF5e2JvcmRlci1yaWdodC1jb2xvcjoj
+          ZTM5YTEzfS5uYW1le2ZvbnQtc2l6ZToxNnB4O2ZvbnQtd2VpZ2h0OjkwMH0ubWV0YXtmb250LXNpemU6MTJweDtsaW5lLWhlaWdo
+          dDoxLjk7Y29sb3I6IzY2Nzk3ZTttYXJnaW4tdG9wOjVweH0uYWN0aW9uc3tkaXNwbGF5OmZsZXg7Z2FwOjdweDtmbGV4LXdyYXA6
+          d3JhcDttYXJnaW4tdG9wOjEwcHh9Lm1pbml7cGFkZGluZzo5cHggMTFweDtib3JkZXItcmFkaXVzOjEwcHg7Ym9yZGVyOjA7Zm9u
+          dDppbmhlcml0O2ZvbnQtd2VpZ2h0OjcwMDtiYWNrZ3JvdW5kOiNlZGY1ZjY7Y29sb3I6IzA3NWI2N30uZW1wdHl7dGV4dC1hbGln
+          bjpjZW50ZXI7cGFkZGluZzoyOHB4O2NvbG9yOiM3NDg2OGE7YmFja2dyb3VuZDojZmZmO2JvcmRlci1yYWRpdXM6MTdweH0uY2hp
+          cHN7ZGlzcGxheTpmbGV4O2ZsZXgtd3JhcDp3cmFwO2dhcDo3cHh9LmNoaXB7YmFja2dyb3VuZDojZWRmN2Y4O2JvcmRlci1yYWRp
+          dXM6MjBweDtwYWRkaW5nOjhweCAxMHB4O2ZvbnQtc2l6ZToxMnB4fS5oaXN0b3J5e2JhY2tncm91bmQ6I2Y3ZmFmYjtib3JkZXIt
+          cmFkaXVzOjEzcHg7cGFkZGluZzoxMHB4O21hcmdpbi10b3A6OXB4O2ZvbnQtc2l6ZToxMnB4O2xpbmUtaGVpZ2h0OjEuOX0ubW9k
+          YWx7ZGlzcGxheTpub25lO3Bvc2l0aW9uOmZpeGVkO2luc2V0OjA7YmFja2dyb3VuZDojMDAwYTt6LWluZGV4OjEwO292ZXJmbG93
+          OmF1dG87cGFkZGluZzoxMnB4fS5ib3h7bWF4LXdpZHRoOjc2MHB4O21hcmdpbjoyMHB4IGF1dG87YmFja2dyb3VuZDojZmZmO2Jv
+          cmRlci1yYWRpdXM6MjJweDtwYWRkaW5nOjE3cHh9LmJveCBoMnttYXJnaW46MCAwIDEycHh9LmdyaWQye2Rpc3BsYXk6Z3JpZDtn
+          cmlkLXRlbXBsYXRlLWNvbHVtbnM6MWZyIDFmcjtnYXA6OHB4fS50b2FzdHtwb3NpdGlvbjpmaXhlZDtib3R0b206MThweDtyaWdo
+          dDoxOHB4O2xlZnQ6MThweDtiYWNrZ3JvdW5kOiMxNjNiNDI7Y29sb3I6I2ZmZjtwYWRkaW5nOjEycHg7Ym9yZGVyLXJhZGl1czox
+          M3B4O2Rpc3BsYXk6bm9uZTt0ZXh0LWFsaWduOmNlbnRlcjt6LWluZGV4OjIwfUBtZWRpYShtYXgtd2lkdGg6NjAwcHgpey5zdGF0
+          c3tncmlkLXRlbXBsYXRlLWNvbHVtbnM6MWZyIDFmcn0uZ3JpZDJ7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOjFmcn0uYWN0aW9ucyAu
+          YnRue2ZsZXg6MX19Cjwvc3R5bGU+PC9oZWFkPjxib2R5PjxoZWFkZXI+PGRpdiBjbGFzcz0iYnJhbmQiPjxkaXYgY2xhc3M9Imxv
+          Z28iPvCfkqc8L2Rpdj48ZGl2PjxkaXYgY2xhc3M9InRpdGxlIj7Zh9in2qnYp9mGINmG2YjbjNmGPC9kaXY+PGRpdiBjbGFzcz0i
+          c3ViIj7Zhdiv24zYsduM2Kog2K3YsdmB2YfigIzYp9uMINmF2LTYqtix24wg2Ygg2LPYsdmI24zYsyDYqti12YHbjNmHINii2Kg8
+          L2Rpdj48L2Rpdj48L2Rpdj48L2hlYWRlcj48bWFpbj48ZGl2IGNsYXNzPSJzdGF0cyI+PGRpdiBjbGFzcz0iY2FyZCI+PGRpdiBj
+          bGFzcz0ibnVtIiBpZD0idG90YWwiPtuwPC9kaXY+PGRpdiBjbGFzcz0ibGJsIj7aqdmEINmF2LTYqtix24zYp9mGPC9kaXY+PC9k
+          aXY+PGRpdiBjbGFzcz0iY2FyZCI+PGRpdiBjbGFzcz0ibnVtIiBpZD0idG9kYXlDb3VudCI+27A8L2Rpdj48ZGl2IGNsYXNzPSJs
+          YmwiPtiz2LHZiNuM2LMg2KfZhdix2YjYsjwvZGl2PjwvZGl2PjxkaXYgY2xhc3M9ImNhcmQiPjxkaXYgY2xhc3M9Im51bSIgaWQ9
+          InNvb25Db3VudCI+27A8L2Rpdj48ZGl2IGNsYXNzPSJsYmwiPtuzINix2YjYsiDYotuM2YbYr9mHPC9kaXY+PC9kaXY+PGRpdiBj
+          bGFzcz0iY2FyZCI+PGRpdiBjbGFzcz0ibnVtIiBpZD0ib3ZlckNvdW50Ij7bsDwvZGl2PjxkaXYgY2xhc3M9ImxibCI+2LnZgtio
+          4oCM2KfZgdiq2KfYr9mHPC9kaXY+PC9kaXY+PC9kaXY+PGRpdiBjbGFzcz0ibWVudSI+PGJ1dHRvbiBjbGFzcz0iYnRuIHByaW1h
+          cnkiIG9uY2xpY2s9Im9wZW5BZGQoKSI+4p6VINmF2LTYqtix24wg2KzYr9uM2K88L2J1dHRvbj48YnV0dG9uIGNsYXNzPSJidG4g
+          bGlnaHQiIG9uY2xpY2s9InNob3dDdXN0b21lcnMoKSI+8J+RpCDZhdi02KrYsduM2KfZhjwvYnV0dG9uPjxidXR0b24gY2xhc3M9
+          ImJ0biB3YXJuIiBvbmNsaWNrPSJzaG93RHVlKCkiPvCflKcg2LPYsdmI24zYs+KAjNmH2KfbjCDYp9mF2LHZiNiyPC9idXR0b24+
+          PGJ1dHRvbiBjbGFzcz0iYnRuIGxpZ2h0IiBvbmNsaWNrPSJBbmRyb2lkLmltcG9ydEV4Y2VsKCkiPvCfk6Ug2YjYsdmI2K8gRXhj
+          ZWw8L2J1dHRvbj48YnV0dG9uIGNsYXNzPSJidG4gbGlnaHQiIG9uY2xpY2s9ImV4cG9ydEV4Y2VsKCkiPvCfk6Qg2K7YsdmI2Kzb
+          jCBFeGNlbDwvYnV0dG9uPjxidXR0b24gY2xhc3M9ImJ0biBsaWdodCIgb25jbGljaz0iYmFja3VwKCkiPvCfkr4g2b7YtNiq24zY
+          qNin2YY8L2J1dHRvbj48L2Rpdj48ZGl2IGlkPSJ0b2FzdCIgY2xhc3M9InRvYXN0Ij48L2Rpdj48c2VjdGlvbiBpZD0iY29udGVu
+          dCI+PC9zZWN0aW9uPjwvbWFpbj48ZGl2IGlkPSJtb2RhbCIgY2xhc3M9Im1vZGFsIj48ZGl2IGNsYXNzPSJib3giIGlkPSJib3gi
+          PjwvZGl2PjwvZGl2PjxzY3JpcHQgc3JjPSJ4bHN4LmZ1bGwubWluLmpzIj48L3NjcmlwdD48c2NyaXB0Pgpjb25zdCBLRVk9J2hr
+          X3Y0JztsZXQgY3VzdG9tZXJzPUpTT04ucGFyc2UobG9jYWxTdG9yYWdlLmdldEl0ZW0oS0VZKXx8J1tdJyk7CmNvbnN0IG5vcm09
+          cz0+U3RyaW5nKHM/PycnKS5yZXBsYWNlKC9b2YrZiV0vZywn24wnKS5yZXBsYWNlKC/Zgy9nLCfaqScpLnJlcGxhY2UoL1vbsC3b
+          uV0vZyxkPT4n27Dbsduy27PbtNu127bbt9u427knLmluZGV4T2YoZCkpLnJlcGxhY2UoL1xzKy9nLCcgJykudHJpbSgpLnRvTG93
+          ZXJDYXNlKCk7CmNvbnN0IGVzYz1zPT5TdHJpbmcocz8/JycpLnJlcGxhY2UoL1smPD4iJ10vZyxtPT4oeycmJzonJmFtcDsnLCc8
+          JzonJmx0OycsJz4nOicmZ3Q7JywnIic6JyZxdW90OycsIiciOicmIzAzOTsnfVttXSkpOwpmdW5jdGlvbiBzYXZlKCl7bG9jYWxT
+          dG9yYWdlLnNldEl0ZW0oS0VZLEpTT04uc3RyaW5naWZ5KGN1c3RvbWVycykpfWZ1bmN0aW9uIHRvYXN0KHQpe2xldCBlPWRvY3Vt
+          ZW50LmdldEVsZW1lbnRCeUlkKCd0b2FzdCcpO2UudGV4dENvbnRlbnQ9dDtlLnN0eWxlLmRpc3BsYXk9J2Jsb2NrJztzZXRUaW1l
+          b3V0KCgpPT5lLnN0eWxlLmRpc3BsYXk9J25vbmUnLDI1MDApfQpmdW5jdGlvbiBqYWxhbGlUb0dyZWdvcmlhbihqeSxqbSxqZCl7
+          bGV0IGd5PWp5KzYyMTtsZXQgYnJlYWtzPVstNjEsOSwzOCwxOTksNDI2LDY4Niw3NTYsODE4LDExMTEsMTE4MSwxMjEwLDE2MzUs
+          MjA2MCwyMDk3LDIxOTIsMjI2MiwyMzI0LDIzOTQsMjQ1NiwzMTc4XTtsZXQgbGVhcEo9LTE0LCBqcD1icmVha3NbMF0sanVtcD0w
+          O2ZvcihsZXQgaT0xO2k8YnJlYWtzLmxlbmd0aDtpKyspe2xldCBqbTA9YnJlYWtzW2ldLGp1bXAwPWptMC1qcDtpZihqeTxqbTAp
+          e2p1bXA9anVtcDA7YnJlYWt9bGVhcEorPU1hdGguZmxvb3IoanVtcDAvMzMpKjgrTWF0aC5mbG9vcigoanVtcDAlMzMpLzQpO2pw
+          PWptMH1sZXQgbj1qeS1qcDtsZWFwSis9TWF0aC5mbG9vcihuLzMzKSo4K01hdGguZmxvb3IoKChuJTMzKSszKS80KTtpZihqdW1w
+          JTMzPT09NCYmanVtcD09PW4pbGVhcEorKztsZXQgbGVhcEc9TWF0aC5mbG9vcihneS80KS1NYXRoLmZsb29yKChNYXRoLmZsb29y
+          KGd5LzEwMCkrMSkqMy80KS0xNTA7bGV0IG1hcmNoPTIwK2xlYXBKLWxlYXBHO2xldCBnZGF5O2lmKGptPD02KWdkYXk9KGptLTEp
+          KjMxK2pkLTE7ZWxzZSBnZGF5PTYqMzErKGptLTcpKjMwK2pkLTE7bGV0IGdkPW5ldyBEYXRlKGd5LDIsbWFyY2gpO2dkLnNldERh
+          dGUoZ2QuZ2V0RGF0ZSgpK2dkYXkpO3JldHVybiBnZH1mdW5jdGlvbiBncmVnb3JpYW5Ub0phbGFsaShnZCl7bGV0IGd5PWdkLmdl
+          dEZ1bGxZZWFyKCksZ209Z2QuZ2V0TW9udGgoKSsxLGdkdj1nZC5nZXREYXRlKCk7bGV0IGdfZF9tPVswLDMxLDU5LDkwLDEyMCwx
+          NTEsMTgxLDIxMiwyNDMsMjczLDMwNCwzMzRdO2xldCBneTI9Z20+Mj9neSsxOmd5O2xldCBkYXlzPTM1NTY2NiszNjUqZ3krTWF0
+          aC5mbG9vcigoZ3kyKzMpLzQpLU1hdGguZmxvb3IoKGd5Mis5OSkvMTAwKStNYXRoLmZsb29yKChneTIrMzk5KS80MDApK2dkditn
+          X2RfbVtnbS0xXTtsZXQgank9LTE1OTUrMzMqTWF0aC5mbG9vcihkYXlzLzEyMDUzKTtkYXlzJT0xMjA1MztqeSs9NCpNYXRoLmZs
+          b29yKGRheXMvMTQ2MSk7ZGF5cyU9MTQ2MTtpZihkYXlzPjM2NSl7ankrPU1hdGguZmxvb3IoKGRheXMtMSkvMzY1KTtkYXlzPShk
+          YXlzLTEpJTM2NX1sZXQgam09ZGF5czwxODY/MStNYXRoLmZsb29yKGRheXMvMzEpOjcrTWF0aC5mbG9vcigoZGF5cy0xODYpLzMw
+          KTtsZXQgamQ9MSsoZGF5czwxODY/ZGF5cyUzMTooZGF5cy0xODYpJTMwKTtyZXR1cm4gankrJy8nK1N0cmluZyhqbSkucGFkU3Rh
+          cnQoMiwnMCcpKycvJytTdHJpbmcoamQpLnBhZFN0YXJ0KDIsJzAnKX1mdW5jdGlvbiBwZGF0ZShzKXtzPW5vcm0ocykucmVwbGFj
+          ZSgvLS9nLCcvJyk7bGV0IG09cy5tYXRjaCgvXihcZHs0fSlcLyhcZHsxLDJ9KVwvKFxkezEsMn0pJC8pO2lmKCFtKXJldHVybiBu
+          dWxsO2xldCB5PSttWzFdLG1vPSttWzJdLGQ9K21bM107aWYoeT49MTMwMCYmeTwxNTAwKXJldHVybiBqYWxhbGlUb0dyZWdvcmlh
+          bih5LG1vLGQpO3JldHVybiBuZXcgRGF0ZSh5LG1vLTEsZCl9CmZ1bmN0aW9uIGRheXMocyl7bGV0IGQ9cGRhdGUocyk7aWYoIWQp
+          cmV0dXJuIDk5OTk5O2xldCBuPW5ldyBEYXRlKCk7bi5zZXRIb3VycygwLDAsMCwwKTtyZXR1cm4gTWF0aC5yb3VuZCgoZC1uKS84
+          NjQwMDAwMCl9CmZ1bmN0aW9uIHRvZGF5KCl7cmV0dXJuIGdyZWdvcmlhblRvSmFsYWxpKG5ldyBEYXRlKCkpfWZ1bmN0aW9uIG5l
+          eHQ2KHMpe2xldCBkPXBkYXRlKHMpfHxuZXcgRGF0ZSgpO2Quc2V0TW9udGgoZC5nZXRNb250aCgpKzYpO3JldHVybiBncmVnb3Jp
+          YW5Ub0phbGFsaShkKX0KZnVuY3Rpb24gcmVuZGVyU3RhdHMoKXtsZXQgdD0wLHM9MCxvPTA7Y3VzdG9tZXJzLmZvckVhY2goYz0+
+          e2xldCBkPWRheXMoYy5uZXh0KTtpZihkPT09MCl0Kys7ZWxzZSBpZihkPjAmJmQ8PTMpcysrO2Vsc2UgaWYoZDwwKW8rK30pO3Rv
+          dGFsLnRleHRDb250ZW50PWN1c3RvbWVycy5sZW5ndGg7dG9kYXlDb3VudC50ZXh0Q29udGVudD10O3Nvb25Db3VudC50ZXh0Q29u
+          dGVudD1zO292ZXJDb3VudC50ZXh0Q29udGVudD1vfQpmdW5jdGlvbiBzaG93RHVlKCl7ZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQo
+          J2NvbnRlbnQnKS5pbm5lckhUTUw9Jyc7cmVuZGVyU3RhdHMoKTtsZXQgYXJyPWN1c3RvbWVycy5tYXAoKGMsaSk9Pih7YyxpLGQ6
+          ZGF5cyhjLm5leHQpfSkpLmZpbHRlcih4PT54LmQ8PTMpLnNvcnQoKGEsYik9PmEuZC1iLmQpO2RvY3VtZW50LmdldEVsZW1lbnRC
+          eUlkKCdjb250ZW50JykuaW5uZXJIVE1MPSc8c2VjdGlvbj48aDI+8J+UpyDYs9ix2YjbjNiz4oCM2YfYp9uMINin2YXYsdmI2LIg
+          2Ygg2YbYstiv24zaqTwvaDI+JysgKGFyci5sZW5ndGg/YXJyLm1hcCh4PT5jYXJkKHguYyx4LmkseC5kKSkuam9pbignJyk6Jzxk
+          aXYgY2xhc3M9ImVtcHR5Ij7wn46JINin2YXYsdmI2LIg2LPYsdix2LPbjNivINir2KjYquKAjNi02K/Zh+KAjNin24wg2YbYr9in
+          2LHbjNivLjwvZGl2PicpKyc8L3NlY3Rpb24+J30KZnVuY3Rpb24gc2hvd0N1c3RvbWVycygpe2RvY3VtZW50LmdldEVsZW1lbnRC
+          eUlkKCdjb250ZW50JykuaW5uZXJIVE1MPSc8c2VjdGlvbj48aDI+8J+RpCDZhdi02KrYsduM2KfZhjwvaDI+PGlucHV0IGlkPSJz
+          ZWFyY2giIHBsYWNlaG9sZGVyPSLwn5SOINmG2KfZhdiMINi02YXYp9ix2YfYjCDYotiv2LHYsyDbjNinINmF2K/ZhCDYsdinINis
+          2LPYqtis2Ygg2qnZhtuM2K8uLi4iIG9uaW5wdXQ9Imxpc3RDdXN0b21lcnMoKSI+PGRpdiBpZD0ibGlzdCI+PC9kaXY+PC9zZWN0
+          aW9uPic7bGlzdEN1c3RvbWVycygpfQpmdW5jdGlvbiBsaXN0Q3VzdG9tZXJzKCl7bGV0IHE9bm9ybShkb2N1bWVudC5nZXRFbGVt
+          ZW50QnlJZCgnc2VhcmNoJyk/LnZhbHVlfHwnJyk7bGV0IGFycj1jdXN0b21lcnMubWFwKChjLGkpPT4oe2MsaX0pKS5maWx0ZXIo
+          eD0+IXF8fG5vcm0oW3guYy5uYW1lLHguYy5waG9uZSx4LmMuYWRkcmVzcyx4LmMuZGV2aWNlXS5qb2luKCcgJykpLmluY2x1ZGVz
+          KHEpKTtkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnbGlzdCcpLmlubmVySFRNTD1hcnIubGVuZ3RoP2Fyci5tYXAoeD0+Y2FyZCh4
+          LmMseC5pLGRheXMoeC5jLm5leHQpKSkuam9pbignJyk6JzxkaXYgY2xhc3M9ImVtcHR5Ij7Zhdi02KrYsduMINm+24zYr9inINmG
+          2LTYry48L2Rpdj4nfQpmdW5jdGlvbiBjYXJkKGMsaSxkKXtsZXQgY2xzPWQ8MD8nb3Zlcic6ZD09PTA/J3RvZGF5JzonJztsZXQg
+          bGFiPWQ8MD9NYXRoLmFicyhkKSsnINix2YjYsiDar9iw2LTYqtmHJzpkPT09MD8n2KfZhdix2YjYsic6ZDw5OTk/J9uzINix2YjY
+          siDYotuM2YbYr9mHJzon4oCUJztyZXR1cm4gYDxkaXYgY2xhc3M9ImN1c3RvbWVyICR7Y2xzfSI+PGRpdiBjbGFzcz0ibmFtZSI+
+          JHtlc2MoYy5uYW1lfHwn2KjYr9mI2YYg2YbYp9mFJyl9PC9kaXY+PGRpdiBjbGFzcz0ibWV0YSI+8J+TniAke2VzYyhjLnBob25l
+          fHwn4oCUJyl9PGJyPvCfk40gJHtlc2MoYy5hZGRyZXNzfHwn4oCUJyl9PGJyPvCfkqcgJHtlc2MoYy5kZXZpY2V8fCfigJQnKX08
+          YnI+8J+ThSDZhti12Kg6ICR7ZXNjKGMuaW5zdGFsbHx8J+KAlCcpfTxicj7wn5SUINiz2LHZiNuM2LMg2KjYudiv24w6ICR7ZXNj
+          KGMubmV4dHx8J+KAlCcpfSAke2xhYn08L2Rpdj48ZGl2IGNsYXNzPSJhY3Rpb25zIj48YnV0dG9uIGNsYXNzPSJtaW5pIiBvbmNs
+          aWNrPSJ2aWV3KCR7aX0pIj7wn5OCINm+2LHZiNmG2K/ZhzwvYnV0dG9uPiR7Yy5waG9uZT9gPGJ1dHRvbiBjbGFzcz0ibWluaSIg
+          b25jbGljaz0iY2FsbEN1c3RvbWVyKCR7aX0pIj7wn5OeINiq2YXYp9izPC9idXR0b24+PGJ1dHRvbiBjbGFzcz0ibWluaSIgb25j
+          bGljaz0id2hhdHNhcHAoJHtpfSkiPvCfn6Ig2YjYp9iq2LPYp9m+PC9idXR0b24+PGJ1dHRvbiBjbGFzcz0ibWluaSIgb25jbGlj
+          az0ic21zKCR7aX0pIj7wn5KsINm+24zYp9mF2qk8L2J1dHRvbj5gOicnfTxidXR0b24gY2xhc3M9Im1pbmkiIG9uY2xpY2s9InNl
+          cnZpY2UoJHtpfSkiPvCflKcg2KvYqNiqINiz2LHZiNuM2LM8L2J1dHRvbj48L2Rpdj48L2Rpdj5gfQpmdW5jdGlvbiBvcGVuTW9k
+          YWwoaCl7Ym94LmlubmVySFRNTD1oO21vZGFsLnN0eWxlLmRpc3BsYXk9J2Jsb2NrJ31mdW5jdGlvbiBjbG9zZU1vZGFsKCl7bW9k
+          YWwuc3R5bGUuZGlzcGxheT0nbm9uZSd9CmZ1bmN0aW9uIG9wZW5BZGQoKXtvcGVuTW9kYWwoYDxoMj7inpUg2YXYtNiq2LHbjCDY
+          rNiv24zYrzwvaDI+PGRpdiBjbGFzcz0iZ3JpZDIiPjxpbnB1dCBpZD0ibiIgcGxhY2Vob2xkZXI9ItmG2KfZhSDZiCDZhtin2YUg
+          2K7Yp9mG2YjYp9iv2q/bjCI+PGlucHV0IGlkPSJwaCIgcGxhY2Vob2xkZXI9Iti02YXYp9ix2Ycg2YXZiNio2KfbjNmEIj48aW5w
+          dXQgaWQ9ImlucyIgcGxhY2Vob2xkZXI9Itiq2KfYsduM2K4g2YbYtdioINi02YXYs9uMIj48aW5wdXQgaWQ9Im5leHQiIHBsYWNl
+          aG9sZGVyPSLZhdmI2LnYryDYqNi52K/bjNibINiu2KfZhNuMID0gK9u2INmF2KfZhyI+PGlucHV0IGlkPSJkZXYiIHBsYWNlaG9s
+          ZGVyPSLZhtmI2LkgLyDZhdiv2YQg2K/Ys9iq2q/Yp9mHIj48aW5wdXQgaWQ9ImRlYnQiIHBsYWNlaG9sZGVyPSLYqNiv2YfbjCI+
+          PC9kaXY+PHRleHRhcmVhIGlkPSJhZGRyIiBwbGFjZWhvbGRlcj0i2KLYr9ix2LMiPjwvdGV4dGFyZWE+PHRleHRhcmVhIGlkPSJu
+          b3RlIiBwbGFjZWhvbGRlcj0i2YXZhNin2K3YuNin2KoiPjwvdGV4dGFyZWE+PGRpdiBjbGFzcz0iYWN0aW9ucyI+PGJ1dHRvbiBj
+          bGFzcz0iYnRuIHByaW1hcnkiIG9uY2xpY2s9ImFkZCgpIj7YsNiu24zYsdmHPC9idXR0b24+PGJ1dHRvbiBjbGFzcz0iYnRuIGxp
+          Z2h0IiBvbmNsaWNrPSJjbG9zZU1vZGFsKCkiPtin2YbYtdix2KfZgTwvYnV0dG9uPjwvZGl2PmApfQpmdW5jdGlvbiBhZGQoKXts
+          ZXQgYz17aWQ6RGF0ZS5ub3coKSxuYW1lOm4udmFsdWUudHJpbSgpLHBob25lOnBoLnZhbHVlLnRyaW0oKSxpbnN0YWxsOmlucy52
+          YWx1ZS50cmltKCksbmV4dDpuZXh0LnZhbHVlLnRyaW0oKXx8bmV4dDYoaW5zLnZhbHVlKSxkZXZpY2U6ZGV2LnZhbHVlLnRyaW0o
+          KSxkZWJ0OmRlYnQudmFsdWUudHJpbSgpLGFkZHJlc3M6YWRkci52YWx1ZS50cmltKCksbm90ZXM6bm90ZS52YWx1ZS50cmltKCks
+          aGlzdG9yeTpbXX07aWYoIWMubmFtZSYmIWMucGhvbmUpe2FsZXJ0KCfZhtin2YUg24zYpyDYtNmF2KfYsdmHINix2Kcg2YjYp9ix
+          2K8g2qnZhtuM2K8nKTtyZXR1cm59Y3VzdG9tZXJzLnB1c2goYyk7c2F2ZSgpO3NjaGVkdWxlQ3VzdG9tZXIoYyk7Y2xvc2VNb2Rh
+          bCgpO3Nob3dEdWUoKTt0b2FzdCgn4pyFINmF2LTYqtix24wg2KvYqNiqINi02K8nKX0KZnVuY3Rpb24gdmlldyhpKXtsZXQgYz1j
+          dXN0b21lcnNbaV0saD1jLmhpc3Rvcnl8fFtdO29wZW5Nb2RhbChgPGgyPvCfkaQgJHtlc2MoYy5uYW1lKX08L2gyPjxkaXYgY2xh
+          c3M9Im1ldGEiPvCfk54gJHtlc2MoYy5waG9uZSl9PGJyPvCfk40gJHtlc2MoYy5hZGRyZXNzKX08YnI+8J+SpyAke2VzYyhjLmRl
+          dmljZSl9PGJyPvCfk4Ug2YbYtdioOiAke2VzYyhjLmluc3RhbGwpfTxicj7wn5SUINiz2LHZiNuM2LMg2KjYudiv24w6ICR7ZXNj
+          KGMubmV4dCl9PGJyPvCfkrAg2KjYr9mH24w6ICR7ZXNjKGMuZGVidCl9PGJyPvCfk50gJHtlc2MoYy5ub3Rlcyl9PC9kaXY+PGhy
+          PjxiPtiz2YjYp9io2YIg2K7Yr9mF2KfYqiAoJHtoLmxlbmd0aH0pPC9iPiR7aC5sZW5ndGg/aC5zbGljZSgpLnJldmVyc2UoKS5t
+          YXAoeD0+YDxkaXYgY2xhc3M9Imhpc3RvcnkiPvCfk4UgJHtlc2MoeC5kYXRlKX08YnI+2YHbjNmE2KrYsdmH2Kc6ICR7ZXNjKHgu
+          ZmlsdGVyc3x8J+KAlCcpfTxicj7ZhdmF2KjYsdin2YY6ICR7ZXNjKHgubWVtYnJhbmV8fCfigJQnKX08YnI+2YLYt9i52KfYqjog
+          JHtlc2MoeC5wYXJ0c3x8J+KAlCcpfTxicj7Zh9iy24zZhtmHOiAke2VzYyh4LmNvc3R8fCfigJQnKX0gfCDYr9ix24zYp9mB2Krb
+          jDogJHtlc2MoeC5wYWlkfHwn4oCUJyl9PGJyPvCfk50gJHtlc2MoeC5ub3RlfHwnJyl9PC9kaXY+YCkuam9pbignJyk6JzxkaXYg
+          Y2xhc3M9ImVtcHR5Ij7Zh9mG2YjYsiDYrtiv2YXYqtuMINir2KjYqiDZhti02K/Zhy48L2Rpdj4nfTxkaXYgY2xhc3M9ImFjdGlv
+          bnMiPjxidXR0b24gY2xhc3M9ImJ0biBwcmltYXJ5IiBvbmNsaWNrPSJzZXJ2aWNlKCR7aX0pIj7wn5SnINir2KjYqiDYs9ix2Yjb
+          jNizPC9idXR0b24+PGJ1dHRvbiBjbGFzcz0iYnRuIGxpZ2h0IiBvbmNsaWNrPSJlZGl0KCR7aX0pIj7inI/vuI8g2YjbjNix2Kfb
+          jNi0PC9idXR0b24+PGJ1dHRvbiBjbGFzcz0iYnRuIGxpZ2h0IiBvbmNsaWNrPSJjbG9zZU1vZGFsKCkiPtio2LPYqtmGPC9idXR0
+          b24+PC9kaXY+YCl9CmZ1bmN0aW9uIGVkaXQoaSl7bGV0IGM9Y3VzdG9tZXJzW2ldO29wZW5Nb2RhbChgPGgyPuKcj++4jyDZiNuM
+          2LHYp9uM2LQ8L2gyPjxkaXYgY2xhc3M9ImdyaWQyIj48aW5wdXQgaWQ9ImVuIiB2YWx1ZT0iJHtlc2MoYy5uYW1lKX0iPjxpbnB1
+          dCBpZD0iZXAiIHZhbHVlPSIke2VzYyhjLnBob25lKX0iPjxpbnB1dCBpZD0iZWkiIHZhbHVlPSIke2VzYyhjLmluc3RhbGwpfSI+
+          PGlucHV0IGlkPSJleCIgdmFsdWU9IiR7ZXNjKGMubmV4dCl9Ij48aW5wdXQgaWQ9ImVkIiB2YWx1ZT0iJHtlc2MoYy5kZXZpY2Up
+          fSI+PGlucHV0IGlkPSJlYiIgdmFsdWU9IiR7ZXNjKGMuZGVidCl9Ij48L2Rpdj48dGV4dGFyZWEgaWQ9ImVhIj4ke2VzYyhjLmFk
+          ZHJlc3MpfTwvdGV4dGFyZWE+PHRleHRhcmVhIGlkPSJlbm90ZSI+JHtlc2MoYy5ub3Rlcyl9PC90ZXh0YXJlYT48ZGl2IGNsYXNz
+          PSJhY3Rpb25zIj48YnV0dG9uIGNsYXNzPSJidG4gcHJpbWFyeSIgb25jbGljaz0ic2F2ZUVkaXQoJHtpfSkiPtiw2K7bjNix2Yc8
+          L2J1dHRvbj48YnV0dG9uIGNsYXNzPSJidG4gbGlnaHQiIG9uY2xpY2s9InZpZXcoJHtpfSkiPtin2YbYtdix2KfZgTwvYnV0dG9u
+          PjwvZGl2PmApfQpmdW5jdGlvbiBzYXZlRWRpdChpKXtPYmplY3QuYXNzaWduKGN1c3RvbWVyc1tpXSx7bmFtZTplbi52YWx1ZSxw
+          aG9uZTplcC52YWx1ZSxpbnN0YWxsOmVpLnZhbHVlLG5leHQ6ZXgudmFsdWUsZGV2aWNlOmVkLnZhbHVlLGRlYnQ6ZWIudmFsdWUs
+          YWRkcmVzczplYS52YWx1ZSxub3Rlczplbm90ZS52YWx1ZX0pO3NhdmUoKTtzY2hlZHVsZUN1c3RvbWVyKGN1c3RvbWVyc1tpXSk7
+          Y2xvc2VNb2RhbCgpO3Nob3dEdWUoKTt0b2FzdCgn4pyFINin2LfZhNin2LnYp9iqINiw2K7bjNix2Ycg2LTYrycpfQpmdW5jdGlv
+          biBzZXJ2aWNlKGkpe2xldCBjPWN1c3RvbWVyc1tpXSxmcz1bJ9mB24zZhNiq2LEg27EnLCfZgduM2YTYqtixINuyJywn2YHbjNmE
+          2KrYsSDbsycsJ9mB24zZhNiq2LEg27QnLCfZgduM2YTYqtixINu1Jywn2YHbjNmE2KrYsSDbticsJ9mB24zZhNiq2LEg27cnXSxw
+          cz1bJ9m+2YXZvicsJ9i024zYsSDYqNix2YLbjCcsJ9mH2YjYstuM2YbarycsJ9i024zYsSDYqNix2K/Yp9i02KonLCfZvtix2LTY
+          sScsJ9mB2YTZiNiz2YjbjNuM2oYnLCfYtNmE2YbaryDZiCDYp9iq2LXYp9mE2KfYqiddO29wZW5Nb2RhbChgPGgyPvCflKcg2KvY
+          qNiqINiz2LHZiNuM2LM8L2gyPjxkaXY+2YHbjNmE2KrYsdmH2KfbjCDYqti52YjbjNi24oCM2LTYr9mHPC9kaXY+PGRpdiBjbGFz
+          cz0iY2hpcHMiPiR7ZnMubWFwKCh4LGopPT5gPGxhYmVsIGNsYXNzPSJjaGlwIj48aW5wdXQgdHlwZT0iY2hlY2tib3giIGlkPSJm
+          JHtqfSI+ICR7eH08L2xhYmVsPmApLmpvaW4oJycpfTwvZGl2PjxzZWxlY3QgaWQ9Im1lbSI+PG9wdGlvbj7Yqti52YjbjNi2INmG
+          2LTYrzwvb3B0aW9uPjxvcHRpb24+2KrYudmI24zYtiDYtNivPC9vcHRpb24+PG9wdGlvbj7YqNix2LHYs9uMINi02K88L29wdGlv
+          bj48L3NlbGVjdD48ZGl2PtmC2LfYudin2Ko8L2Rpdj48ZGl2IGNsYXNzPSJjaGlwcyI+JHtwcy5tYXAoKHgsaik9PmA8bGFiZWwg
+          Y2xhc3M9ImNoaXAiPjxpbnB1dCB0eXBlPSJjaGVja2JveCIgaWQ9InAke2p9Ij4gJHt4fTwvbGFiZWw+YCkuam9pbignJyl9PC9k
+          aXY+PGRpdiBjbGFzcz0iZ3JpZDIiPjxpbnB1dCBpZD0iY29zdCIgcGxhY2Vob2xkZXI9ItmH2LLbjNmG2YciPjxpbnB1dCBpZD0i
+          cGFpZCIgcGxhY2Vob2xkZXI9Itiv2LHbjNin2YHYqtuMIj48L2Rpdj48dGV4dGFyZWEgaWQ9InNuIiBwbGFjZWhvbGRlcj0i24zY
+          p9iv2K/Yp9i02Kog2KraqdmG2LPbjNmGIj48L3RleHRhcmVhPjxkaXYgY2xhc3M9ImFjdGlvbnMiPjxidXR0b24gY2xhc3M9ImJ0
+          biBwcmltYXJ5IiBvbmNsaWNrPSJzYXZlU2VydmljZSgke2l9KSI+2KvYqNiqINiz2LHZiNuM2LM8L2J1dHRvbj48YnV0dG9uIGNs
+          YXNzPSJidG4gbGlnaHQiIG9uY2xpY2s9InZpZXcoJHtpfSkiPtin2YbYtdix2KfZgTwvYnV0dG9uPjwvZGl2PmApfQpmdW5jdGlv
+          biBzYXZlU2VydmljZShpKXtsZXQgZnM9WyfZgduM2YTYqtixINuxJywn2YHbjNmE2KrYsSDbsicsJ9mB24zZhNiq2LEg27MnLCfZ
+          gduM2YTYqtixINu0Jywn2YHbjNmE2KrYsSDbtScsJ9mB24zZhNiq2LEg27YnLCfZgduM2YTYqtixINu3J10uZmlsdGVyKCh4LGop
+          PT5kb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnZicraikuY2hlY2tlZCkscHM9WyfZvtmF2b4nLCfYtNuM2LEg2KjYsdmC24wnLCfZ
+          h9mI2LLbjNmG2q8nLCfYtNuM2LEg2KjYsdiv2KfYtNiqJywn2b7Ysdi02LEnLCfZgdmE2YjYs9mI24zbjNqGJywn2LTZhNmG2q8g
+          2Ygg2KfYqti12KfZhNin2KonXS5maWx0ZXIoKHgsaik9PmRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdwJytqKS5jaGVja2VkKTts
+          ZXQgYz1jdXN0b21lcnNbaV07Yy5oaXN0b3J5PWMuaGlzdG9yeXx8W107Yy5oaXN0b3J5LnB1c2goe2RhdGU6dG9kYXkoKSxmaWx0
+          ZXJzOmZzLmpvaW4oJ9iMICcpLG1lbWJyYW5lOm1lbS52YWx1ZSxwYXJ0czpwcy5qb2luKCfYjCAnKSxjb3N0OmNvc3QudmFsdWUs
+          cGFpZDpwYWlkLnZhbHVlLG5vdGU6c24udmFsdWV9KTtjLm5leHQ9bmV4dDYodG9kYXkoKSk7c2F2ZSgpO3NjaGVkdWxlQ3VzdG9t
+          ZXIoYyk7Y2xvc2VNb2RhbCgpO3Nob3dEdWUoKTt0b2FzdCgn4pyFINiz2LHZiNuM2LMg2KvYqNiqINi02K/YmyDZhdmI2LnYryDY
+          qNi52K/bjCDbtiDZhdin2Ycg2KjYudivJyl9CmZ1bmN0aW9uIHNtcyhpKXtsZXQgYz1jdXN0b21lcnNbaV07bGV0IG1zZz1g2LPZ
+          hNin2YUgJHtjLm5hbWV8fCcnfdiMINiy2YXYp9mGINiz2LHZiNuM2LMg2Ygg2KrYudmI24zYtiDZgduM2YTYqtixINiv2LPYqtqv
+          2KfZhyDYqti12YHbjNmHINii2Kgg2LTZhdinINmB2LHYpyDYsdiz24zYr9mHINin2LPYqi4g2KzZh9iqINmH2YXYp9mH2Ybar9uM
+          INio2Kcg2YXYpyDYqtmF2KfYsyDYqNqv24zYsduM2K8uYDtBbmRyb2lkLnNlbmRTbXMoYy5waG9uZSxtc2cpfQpmdW5jdGlvbiBi
+          YWNrdXAoKXtsZXQgYT1kb2N1bWVudC5jcmVhdGVFbGVtZW50KCdhJyk7YS5ocmVmPVVSTC5jcmVhdGVPYmplY3RVUkwobmV3IEJs
+          b2IoW0pTT04uc3RyaW5naWZ5KHt2ZXJzaW9uOjQsY3VzdG9tZXJzfSxudWxsLDIpXSx7dHlwZTonYXBwbGljYXRpb24vanNvbid9
+          KSk7YS5kb3dubG9hZD0nSGFrYW5Ob3Zpbi1CYWNrdXAuanNvbic7YS5jbGljaygpfQpmdW5jdGlvbiBub3JtYWxpemVQaG9uZShw
+          KXtsZXQgeD1TdHJpbmcocHx8JycpLnJlcGxhY2UoL1teMC05K10vZywnJyk7aWYoeC5zdGFydHNXaXRoKCcwOScpKXJldHVybiAn
+          OTgnK3guc2xpY2UoMSk7aWYoeC5zdGFydHNXaXRoKCcrOTgnKSlyZXR1cm4geC5zbGljZSgxKTtyZXR1cm4geC5yZXBsYWNlKC9e
+          MC8sJzk4Jyl9ZnVuY3Rpb24gY2FsbEN1c3RvbWVyKGkpe2lmKGN1c3RvbWVyc1tpXS5waG9uZSlsb2NhdGlvbi5ocmVmPSd0ZWw6
+          JytjdXN0b21lcnNbaV0ucGhvbmV9ZnVuY3Rpb24gd2hhdHNhcHAoaSl7bGV0IHA9bm9ybWFsaXplUGhvbmUoY3VzdG9tZXJzW2ld
+          LnBob25lKTtpZihwKWxvY2F0aW9uLmhyZWY9J2h0dHBzOi8vd2EubWUvJytwfWZ1bmN0aW9uIGV4cG9ydEV4Y2VsKCl7aWYodHlw
+          ZW9mIFhMU1g9PT0ndW5kZWZpbmVkJyl7YWxlcnQoJ9qp2KrYp9io2K7Yp9mG2YcgRXhjZWwg2KLZhdin2K/ZhyDZhtuM2LPYqicp
+          O3JldHVybn1sZXQgcm93cz1jdXN0b21lcnMubWFwKGM9Pih72YbYp9mFOmMubmFtZXx8Jycs2LTZhdin2LHZh1/YqtmF2KfYszpj
+          LnBob25lfHwnJyzYotiv2LHYszpjLmFkZHJlc3N8fCcnLNmG2YjYuV/Yr9iz2Krar9in2Yc6Yy5kZXZpY2V8fCcnLNiq2KfYsduM
+          2K5f2YbYtdioOmMuaW5zdGFsbHx8Jycs2KLYrtix24zZhl/Ys9ix2YjbjNizOihjLmhpc3Rvcnl8fFtdKS5sZW5ndGg/Yy5oaXN0
+          b3J5W2MuaGlzdG9yeS5sZW5ndGgtMV0uZGF0ZTonJyzZhdmI2LnYr1/Ys9ix2YjbjNizX9io2LnYr9uMOmMubmV4dHx8Jycs2YXZ
+          hdio2LHYp9mGOmMubWVtYnJhbmV8fCcnLNio2K/Zh9uMOmMuZGVidHx8Jycs2YXZhNin2K3YuNin2Ko6Yy5ub3Rlc3x8Jycs2LPZ
+          iNin2KjZgl/Yrtiv2YXYp9iqOihjLmhpc3Rvcnl8fFtdKS5sZW5ndGh9KSk7bGV0IHdzPVhMU1gudXRpbHMuanNvbl90b19zaGVl
+          dChyb3dzKTtsZXQgd2I9WExTWC51dGlscy5ib29rX25ldygpO1hMU1gudXRpbHMuYm9va19hcHBlbmRfc2hlZXQod2Isd3MsJ9mF
+          2LTYqtix24zYp9mGJyk7WExTWC53cml0ZUZpbGUod2IsJ0hha2FuTm92aW4tRXhwb3J0Lnhsc3gnKTt0b2FzdCgn8J+TpCDZgdin
+          24zZhCBFeGNlbCDYs9in2K7YqtmHINi02K8nKX1mdW5jdGlvbiBzY2hlZHVsZUN1c3RvbWVyKGMpe2lmKCFjfHwhYy5waG9uZXx8
+          IWMubmV4dHx8dHlwZW9mIEFuZHJvaWQ9PT0ndW5kZWZpbmVkJylyZXR1cm47bGV0IGQ9cGRhdGUoYy5uZXh0KTtpZighZClyZXR1
+          cm47bGV0IGR1ZT1uZXcgRGF0ZShkKTtkdWUuc2V0SG91cnMoMTAsMCwwLDApO2xldCBiZWZvcmU9bmV3IERhdGUoZHVlLmdldFRp
+          bWUoKS0zKjg2NDAwMDAwKTtsZXQgYmFzZT1TdHJpbmcoYy5pZCkrJ18nK2MubmV4dDtsZXQgd2VsY29tZUtleT0nd2VsY29tZV8n
+          K2MuaWQ7aWYoIWMud2VsY29tZVNlbnQpe0FuZHJvaWQuc2VuZFNtcyhjLnBob25lLGDYs9mE2KfZhSAke2MubmFtZXx8Jyd9INi5
+          2LLbjNiy2Iwg2KjZhyDYrtin2YbZiNin2K/ZhyDZhdi02KrYsduM2KfZhiDZh9in2qnYp9mGINmG2YjbjNmGINiu2YjYtCDYotmF
+          2K/bjNivLiDYqNix2KfbjCDYrtiv2YXYp9iqINmIINmH2YXYp9mH2Ybar9uMINio2Kcg2YXYpyDYr9ixINiq2YXYp9izINio2KfY
+          tNuM2K8uYCk7Yy53ZWxjb21lU2VudD10cnVlO3NhdmUoKX1pZihiZWZvcmUuZ2V0VGltZSgpPkRhdGUubm93KCkpQW5kcm9pZC5z
+          Y2hlZHVsZVNtcyhjLnBob25lLGDYs9mE2KfZhSAke2MubmFtZXx8Jyd9INi52LLbjNiy2Iwg2LPZhyDYsdmI2LIg2KrYpyDZhdmI
+          2LnYryDYs9ix2YjbjNizINiv2LPYqtqv2KfZhyDYqti12YHbjNmHINii2Kgg2LTZhdinINio2KfZgtuMINmF2KfZhtiv2Ycg2KfY
+          s9iqLiDYrNmH2Kog2YfZhdin2YfZhtqv24wg2KjYpyDZh9in2qnYp9mGINmG2YjbjNmGINiq2YXYp9izINio2q/bjNix24zYry5g
+          LGJlZm9yZS5nZXRUaW1lKCksJ3ByZTNfJytiYXNlKTtpZihkdWUuZ2V0VGltZSgpPkRhdGUubm93KCkpQW5kcm9pZC5zY2hlZHVs
+          ZVNtcyhjLnBob25lLGDYs9mE2KfZhSAke2MubmFtZXx8Jyd9INi52LLbjNiy2Iwg2YXZiNi52K8g2LPYsdmI24zYsyDZiCDYqti5
+          2YjbjNi2INmB24zZhNiq2LEg2K/Ys9iq2q/Yp9mHINiq2LXZgduM2Ycg2KLYqCDYtNmF2Kcg2KfZhdix2YjYsiDYp9iz2KouINis
+          2YfYqiDZh9mF2KfZh9mG2q/bjCDYqNinINmH2Kfaqdin2YYg2YbZiNuM2YYg2KrZhdin2LMg2Kjar9uM2LHbjNivLmAsZHVlLmdl
+          dFRpbWUoKSwnZHVlXycrYmFzZSl9CndpbmRvdy5pbXBvcnRDdXN0b21lcnM9ZnVuY3Rpb24ocm93cyl7aWYoIUFycmF5LmlzQXJy
+          YXkocm93cykpcmV0dXJuO2xldCBtPXJvd3MubWFwKChyLGkpPT4oe2lkOid4JytEYXRlLm5vdygpK2ksbmFtZTpyWyfZhtin2YUg
+          2Ygg2YbYp9mFINiu2KfZhtmI2KfYr9qv24wnXXx8clsn2YbYp9mFINmF2LTYqtix24wnXXx8clsn2YbYp9mFJ118fCcnLHBob25l
+          OnJbJ9i02YXYp9ix2Ycg2KrZhdin2LMnXXx8clsn2LTZhdin2LHZhyDYqtmE2YHZhiddfHxyWyfYqtmE2YHZhiddfHwnJyxhZGRy
+          ZXNzOnJbJ9ii2K/YsdizJ118fCcnLGRldmljZTpyWyfZhtmI2Lkg2K/Ys9iq2q/Yp9mHJ118fCcnLGluc3RhbGw6clsn2KrYp9ix
+          24zYriDZhti12KgnXXx8JycsZmlsdGVyOnJbJ9iq2LnZiNuM2LYg2YHbjNmE2KrYsSddfHxyWyfYotiu2LHbjNmGINiq2LnZiNuM
+          2LYg2YHbjNmE2KrYsSddfHwnJyxuZXh0OnJbJ9iq2KfYsduM2K4g2KjYudiv24wnXXx8clsn2YXZiNi52K8g2LPYsdmI24zYsyDY
+          qNi52K/bjCddfHwnJyxtZW1icmFuZTpyWyfZhdmF2KjYsdin2YYnXXx8Jycsbm90ZXM6clsn2YXZhNin2K3YuNin2KonXXx8clsn
+          2YXZhNin2K3Yttin2KonXXx8JycsZGVidDpyWyfYqNiv2Yfaqdin2LHbjCddfHwnJyxoaXN0b3J5OltdfSkpLmZpbHRlcih4PT54
+          Lm5hbWV8fHgucGhvbmV8fHguYWRkcmVzcyk7Y3VzdG9tZXJzPWN1c3RvbWVycy5jb25jYXQobSk7c2F2ZSgpO3Nob3dEdWUoKTth
+          bGVydCgn4pyFICcrbS5sZW5ndGgrJyDZhdi02KrYsduMINmI2KfYsdivINi02K8uJyk7fTtyZW5kZXJTdGF0cygpO3Nob3dEdWUo
+          KTs8L3NjcmlwdD48L2JvZHk+PC9odG1sPg==
+          B64_415415
 
-                  <item name="android:fontFamily">sans</item>
-                  <item name="android:windowLightStatusBar">false</item>
-                  <item name="android:statusBarColor">#087F8C</item>
-                  <item name="android:navigationBarColor">#FFFFFF</item>
-                  <item name="android:colorAccent">#087F8C</item>
-
-              </style>
-
-          </resources>
-          EOF
-
-          cat > app/src/main/AndroidManifest.xml <<'EOF'
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
-              <application
-                  android:allowBackup="true"
-                  android:label="@string/app_name"
-                  android:theme="@style/AppTheme"
-                  android:usesCleartextTraffic="true">
-
-                  <activity
-                      android:name=".MainActivity"
-                      android:screenOrientation="portrait"
-                      android:exported="true">
-
-                      <intent-filter>
-                          <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHER" />
-                      </intent-filter>
-
-                  </activity>
-
-              </application>
-
-          </manifest>
-          EOF
-
-      # ---------------------------------------------------------
-      # Download SheetJS
-      # ---------------------------------------------------------
-      - name: Download SheetJS
-        shell: bash
+      - name: Download Excel engine
         run: |
+          curl -L --fail --retry 3 -o app/src/main/assets/xlsx.full.min.js https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js
 
-          curl -L --fail \
-            https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js \
-            -o app/src/main/assets/xlsx.full.min.js
+      - name: Set up Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
 
-      # ---------------------------------------------------------
-      # Android MainActivity
-      # IMPORTANT:
-      # V3.2 adds WebChromeClient + onShowFileChooser
-      # so the Android file picker actually opens.
-      # ---------------------------------------------------------
-      - name: Create MainActivity
-        shell: bash
-        run: |
+      - name: Build release APK
+        run: gradle --no-daemon assembleRelease
 
-          cat > app/src/main/java/com/hakannovin/app/MainActivity.java <<'EOF'
-          package com.hakannovin.app;
-
-          import android.app.Activity;
-          import android.content.Intent;
-          import android.net.Uri;
-          import android.os.Bundle;
-          import android.webkit.ValueCallback;
-          import android.webkit.WebChromeClient;
-          import android.webkit.WebResourceRequest;
-          import android.webkit.WebSettings;
-          import android.webkit.WebView;
-          import android.webkit.WebViewClient;
-
-          public class MainActivity extends Activity {
-
-              private static final int FILE_CHOOSER_REQUEST = 1001;
-
-              private ValueCallback<Uri[]> filePathCallback;
-
-              private WebView webView;
-
-              @Override
-              protected void onCreate(Bundle savedInstanceState) {
-                  super.onCreate(savedInstanceState);
-
-                  webView = new WebView(this);
-
-                  WebSettings settings = webView.getSettings();
-
-                  settings.setJavaScriptEnabled(true);
-                  settings.setDomStorageEnabled(true);
-                  settings.setAllowFileAccess(true);
-                  settings.setAllowContentAccess(true);
-                  settings.setDatabaseEnabled(true);
-
-                  settings.setBuiltInZoomControls(false);
-                  settings.setDisplayZoomControls(false);
-
-                  webView.setWebViewClient(new WebViewClient() {
-
-                      @Override
-                      public boolean shouldOverrideUrlLoading(
-                              WebView view,
-                              WebResourceRequest request) {
-
-                          return false;
-                      }
-                  });
-
-                  webView.setWebChromeClient(new WebChromeClient() {
-
-                      @Override
-                      public boolean onShowFileChooser(
-                              WebView webView,
-                              ValueCallback<Uri[]> filePathCallback,
-                              FileChooserParams fileChooserParams) {
-
-                          if (MainActivity.this.filePathCallback != null) {
-                              MainActivity.this.filePathCallback.onReceiveValue(null);
-                          }
-
-                          MainActivity.this.filePathCallback = filePathCallback;
-
-                          Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-
-                          intent.addCategory(Intent.CATEGORY_OPENABLE);
-
-                          intent.setType("*/*");
-
-                          intent.putExtra(
-                                  Intent.EXTRA_MIME_TYPES,
-                                  new String[] {
-                                          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                                          "application/vnd.ms-excel",
-                                          "text/csv",
-                                          "application/csv",
-                                          "text/comma-separated-values"
-                                  }
-                          );
-
-                          startActivityForResult(
-                                  Intent.createChooser(
-                                          intent,
-                                          "انتخاب فایل Excel"
-                                  ),
-                                  FILE_CHOOSER_REQUEST
-                          );
-
-                          return true;
-                      }
-                  });
-
-                  webView.loadUrl(
-                          "file:///android_asset/index.html"
-                  );
-
-                  setContentView(webView);
-              }
-
-              @Override
-              protected void onActivityResult(
-                      int requestCode,
-                      int resultCode,
-                      Intent data) {
-
-                  super.onActivityResult(
-                          requestCode,
-                          resultCode,
-                          data
-                  );
-
-                  if (requestCode != FILE_CHOOSER_REQUEST) {
-                      return;
-                  }
-
-                  if (filePathCallback == null) {
-                      return;
-                  }
-
-                  Uri[] results = null;
-
-                  if (resultCode == Activity.RESULT_OK && data != null) {
-
-                      Uri uri = data.getData();
-
-                      if (uri != null) {
-                          results = new Uri[]{uri};
-                      }
-                  }
-
-                  filePathCallback.onReceiveValue(results);
-
-                  filePathCallback = null;
-              }
-
-              @Override
-              public void onBackPressed() {
-
-                  if (webView != null && webView.canGoBack()) {
-                      webView.goBack();
-                  } else {
-                      super.onBackPressed();
-                  }
-              }
-          }
-          EOF
-
-      # ---------------------------------------------------------
-      # Create HTML application
-      # ---------------------------------------------------------
-      - name: Create HakanNovin V3.2
-        shell: bash
-        run: |
-
-          cat > app/src/main/assets/index.html <<'EOF'
-          <!DOCTYPE html>
-
-          <html lang="fa" dir="rtl">
-
-          <head>
-
-          <meta charset="UTF-8">
-
-          <meta
-              name="viewport"
-              content="width=device-width,initial-scale=1,maximum-scale=1"
-          >
-
-          <meta
-              name="theme-color"
-              content="#087F8C"
-          >
-
-          <title>هاکان نوین</title>
-
-          <script src="xlsx.full.min.js"></script>
-
-          <style>
-
-          *{
-              box-sizing:border-box;
-              font-family:
-                  Tahoma,
-                  Arial,
-                  sans-serif;
-          }
-
-          body{
-              margin:0;
-              background:#F3F8F9;
-              color:#17373C;
-          }
-
-          header{
-              background:
-                  linear-gradient(
-                      135deg,
-                      #087F8C,
-                      #12A6A0
-                  );
-
-              color:white;
-
-              padding:
-                  24px
-                  18px
-                  28px;
-
-              border-radius:
-                  0
-                  0
-                  28px
-                  28px;
-
-              box-shadow:
-                  0
-                  5px
-                  18px
-                  rgba(0,0,0,.14);
-          }
-
-          header .logo{
-              width:58px;
-              height:58px;
-
-              display:flex;
-              align-items:center;
-              justify-content:center;
-
-              background:
-                  rgba(255,255,255,.18);
-
-              border:
-                  1px solid
-                  rgba(255,255,255,.3);
-
-              border-radius:18px;
-
-              font-size:31px;
-
-              margin-bottom:12px;
-          }
-
-          header h1{
-              margin:0;
-              font-size:25px;
-          }
-
-          header p{
-              margin:
-                  7px
-                  0
-                  0;
-
-              opacity:.9;
-              font-size:14px;
-          }
-
-          .container{
-              width:100%;
-              max-width:850px;
-              margin:auto;
-              padding:15px;
-          }
-
-          .stats{
-              display:grid;
-              grid-template-columns:
-                  repeat(2,1fr);
-
-              gap:10px;
-
-              margin-top:-4px;
-          }
-
-          .stat{
-              background:white;
-
-              border-radius:18px;
-
-              padding:16px;
-
-              box-shadow:
-                  0
-                  3px
-                  12px
-                  rgba(0,0,0,.07);
-          }
-
-          .stat b{
-              display:block;
-
-              color:#087F8C;
-
-              font-size:25px;
-
-              margin-bottom:5px;
-          }
-
-          .toolbar{
-              display:grid;
-
-              grid-template-columns:
-                  repeat(2,1fr);
-
-              gap:9px;
-
-              margin:
-                  15px
-                  0
-                  10px;
-          }
-
-          button{
-              border:0;
-
-              border-radius:14px;
-
-              padding:
-                  13px
-                  12px;
-
-              font-size:14px;
-
-              min-height:47px;
-
-              cursor:pointer;
-          }
-
-          .primary{
-              background:#087F8C;
-              color:white;
-          }
-
-          .secondary{
-              background:#DFF2F3;
-              color:#087F8C;
-          }
-
-          .danger{
-              background:#FFE5E5;
-              color:#A40020;
-          }
-
-          .search{
-              width:100%;
-
-              border:
-                  1px solid
-                  #D8E4E6;
-
-              background:white;
-
-              border-radius:14px;
-
-              padding:
-                  14px;
-
-              font-size:15px;
-
-              outline:none;
-
-              margin:
-                  5px
-                  0
-                  10px;
-          }
-
-          .search:focus{
-              border-color:#087F8C;
-          }
-
-          .customer{
-              background:white;
-
-              border-radius:17px;
-
-              padding:15px;
-
-              margin:
-                  9px
-                  0;
-
-              box-shadow:
-                  0
-                  3px
-                  12px
-                  rgba(0,0,0,.06);
-          }
-
-          .customer-name{
-              font-size:17px;
-              font-weight:bold;
-          }
-
-          .info{
-              color:#667D81;
-
-              font-size:13px;
-
-              margin-top:6px;
-
-              line-height:1.8;
-          }
-
-          .actions{
-              display:flex;
-
-              gap:7px;
-
-              flex-wrap:wrap;
-
-              margin-top:10px;
-          }
-
-          .actions button{
-              min-height:40px;
-              padding:9px 12px;
-          }
-
-          .empty{
-              text-align:center;
-
-              background:white;
-
-              border-radius:18px;
-
-              padding:35px 15px;
-
-              color:#718487;
-          }
-
-          .message{
-              display:none;
-
-              padding:13px;
-
-              background:#E4F8EB;
-
-              color:#176B3A;
-
-              border-radius:14px;
-
-              margin:
-                  10px
-                  0;
-          }
-
-          .modal{
-              display:none;
-
-              position:fixed;
-
-              inset:0;
-
-              background:
-                  rgba(0,0,0,.72);
-
-              z-index:100;
-
-              padding:14px;
-
-              overflow:auto;
-          }
-
-          .modal-box{
-              background:white;
-
-              max-width:720px;
-
-              margin:
-                  20px
-                  auto;
-
-              border-radius:22px;
-
-              padding:18px;
-          }
-
-          .modal-box h2{
-              margin-top:0;
-          }
-
-          .field{
-              margin:
-                  10px
-                  0;
-          }
-
-          .field label{
-              display:block;
-
-              font-size:13px;
-
-              color:#63777A;
-
-              margin-bottom:5px;
-          }
-
-          .field input,
-          .field textarea{
-              width:100%;
-
-              border:
-                  1px solid
-                  #D8E4E6;
-
-              border-radius:12px;
-
-              padding:13px;
-
-              font-size:15px;
-
-              background:white;
-
-              outline:none;
-          }
-
-          .field textarea{
-              min-height:80px;
-              resize:vertical;
-          }
-
-          .modal-actions{
-              display:flex;
-
-              gap:8px;
-
-              margin-top:15px;
-          }
-
-          .modal-actions button{
-              flex:1;
-          }
-
-          .import-box{
-              background:#F0FAFA;
-
-              border:
-                  1px solid
-                  #D0EEEE;
-
-              border-radius:16px;
-
-              padding:13px;
-
-              margin:
-                  10px
-                  0;
-
-              font-size:13px;
-
-              line-height:1.9;
-          }
-
-          .version{
-              text-align:center;
-
-              color:#9AAEB1;
-
-              font-size:11px;
-
-              margin:
-                  25px
-                  0;
-          }
-
-          </style>
-
-          </head>
-
-
-          <body>
-
-          <header>
-
-              <div class="logo">
-                  💧
-              </div>
-
-              <h1>
-                  هاکان نوین
-              </h1>
-
-              <p>
-                  مدیریت مشتریان و سرویس تصفیه آب
-              </p>
-
-          </header>
-
-
-          <div class="container">
-
-              <div class="stats">
-
-                  <div class="stat">
-
-                      <b id="total">
-                          0
-                      </b>
-
-                      مشتری
-                  </div>
-
-                  <div class="stat">
-
-                      <b id="phoneCount">
-                          0
-                      </b>
-
-                      دارای شماره
-                  </div>
-
-              </div>
-
-
-              <div
-                  id="message"
-                  class="message">
-              </div>
-
-
-              <div class="toolbar">
-
-                  <button
-                      class="primary"
-                      onclick="openAdd()">
-
-                      ➕ مشتری جدید
-
-                  </button>
-
-
-                  <button
-                      class="secondary"
-                      onclick="openExcelPicker()">
-
-                      📥 ورود Excel
-
-                  </button>
-
-
-                  <!--
-                      This input is intentionally hidden.
-                      Android V3.2 MainActivity handles
-                      the file chooser.
-                  -->
-
-                  <input
-                      id="excelInput"
-                      type="file"
-                      accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
-                      style="display:none"
-                  >
-
-
-                  <button
-                      class="secondary"
-                      onclick="exportExcel()">
-
-                      📤 خروجی Excel
-
-                  </button>
-
-
-                  <button
-                      class="danger"
-                      onclick="clearCustomers()">
-
-                      🗑 حذف همه
-
-                  </button>
-
-              </div>
-
-
-              <div class="import-box">
-
-                  📌
-                  برای ورود اطلاعات، روی
-                  <b>«ورود Excel»</b>
-                  بزن و فایل Excel را از گوشی انتخاب کن.
-
-                  <br>
-
-                  برنامه تمام شیت‌های فایل را بررسی می‌کند و
-                  شیتی که اطلاعات مشتری داشته باشد را پیدا می‌کند.
-
-              </div>
-
-
-              <input
-                  id="search"
-                  class="search"
-                  placeholder="🔎 جستجوی نام، شماره، آدرس یا دستگاه..."
-              >
-
-
-              <div id="list"></div>
-
-
-              <div class="version">
-                  Hakan Novin V3.2
-              </div>
-
-          </div>
-
-
-          <!-- ================================================= -->
-          <!-- CUSTOMER MODAL -->
-          <!-- ================================================= -->
-
-          <div
-              id="customerModal"
-              class="modal">
-
-              <div class="modal-box">
-
-                  <h2 id="modalTitle">
-                      مشتری جدید
-                  </h2>
-
-
-                  <div class="field">
-                      <label>
-                          نام و نام خانوادگی
-                      </label>
-
-                      <input id="f_name">
-                  </div>
-
-
-                  <div class="field">
-                      <label>
-                          شماره تماس
-                      </label>
-
-                      <input
-                          id="f_phone"
-                          inputmode="tel">
-                  </div>
-
-
-                  <div class="field">
-                      <label>
-                          آدرس
-                      </label>
-
-                      <textarea id="f_address"></textarea>
-                  </div>
-
-
-                  <div class="field">
-                      <label>
-                          نوع دستگاه
-                      </label>
-
-                      <input id="f_device">
-                  </div>
-
-
-                  <div class="field">
-                      <label>
-                          تاریخ نصب
-                      </label>
-
-                      <input
-                          id="f_install"
-                          placeholder="مثلاً 1404/02/15">
-                  </div>
-
-
-                  <div class="field">
-                      <label>
-                          آخرین تعویض فیلتر
-                      </label>
-
-                      <input
-                          id="f_filter"
-                          placeholder="مثلاً 1404/08/15">
-                  </div>
-
-
-                  <div class="field">
-                      <label>
-                          تاریخ بعدی
-                      </label>
-
-                      <input
-                          id="f_next"
-                          placeholder="مثلاً 1405/02/15">
-                  </div>
-
-
-                  <div class="field">
-                      <label>
-                          فیلتر ۵ و ۶
-                      </label>
-
-                      <input id="f_f56">
-                  </div>
-
-
-                  <div class="field">
-                      <label>
-                          ممبران
-                      </label>
-
-                      <input id="f_membrane">
-                  </div>
-
-
-                  <div class="field">
-                      <label>
-                          ملاحظات
-                      </label>
-
-                      <textarea id="f_notes"></textarea>
-                  </div>
-
-
-                  <div class="field">
-                      <label>
-                          بدهکاری
-                      </label>
-
-                      <input id="f_debt">
-                  </div>
-
-
-                  <div class="modal-actions">
-
-                      <button
-                          class="primary"
-                          onclick="saveCustomer()">
-
-                          💾 ذخیره
-
-                      </button>
-
-                      <button
-                          class="secondary"
-                          onclick="closeModal()">
-
-                          انصراف
-
-                      </button>
-
-                  </div>
-
-              </div>
-
-          </div>
-
-
-          <script>
-
-          /*
-           * =====================================================
-           * HAKAN NOVIN V3.2
-           * =====================================================
-           */
-
-
-          let customers = [];
-
-          let editIndex = -1;
-
-
-          const STORAGE_KEY =
-              "hakan_novin_customers_v32";
-
-
-          /*
-           * =====================================================
-           * LOAD
-           * =====================================================
-           */
-
-          function loadCustomers(){
-
-              try{
-
-                  const old =
-                      localStorage.getItem(
-                          STORAGE_KEY
-                      );
-
-                  if(old){
-
-                      customers =
-                          JSON.parse(old);
-
-                      if(!Array.isArray(customers)){
-                          customers=[];
-                      }
-
-                  }else{
-
-                      /*
-                       * If V3.1 already had data,
-                       * migrate it automatically.
-                       */
-
-                      const previous =
-                          localStorage.getItem(
-                              "hakan_novin_customers"
-                          );
-
-                      if(previous){
-
-                          customers =
-                              JSON.parse(previous);
-
-                          if(!Array.isArray(customers)){
-                              customers=[];
-                          }
-
-                          saveCustomers();
-                      }
-
-                  }
-
-              }catch(error){
-
-                  console.error(error);
-
-                  customers=[];
-
-              }
-
-              render();
-          }
-
-
-          function saveCustomers(){
-
-              localStorage.setItem(
-                  STORAGE_KEY,
-                  JSON.stringify(customers)
-              );
-
-          }
-
-
-          /*
-           * =====================================================
-           * MESSAGE
-           * =====================================================
-           */
-
-          function showMessage(text){
-
-              const box =
-                  document.getElementById(
-                      "message"
-                  );
-
-              box.textContent=text;
-
-              box.style.display="block";
-
-              setTimeout(
-                  function(){
-
-                      box.style.display="none";
-
-                  },
-                  4500
-              );
-          }
-
-
-          /*
-           * =====================================================
-           * CUSTOMER MODAL
-           * =====================================================
-           */
-
-          function openAdd(){
-
-              editIndex=-1;
-
-              document.getElementById(
-                  "modalTitle"
-              ).textContent =
-                  "مشتری جدید";
-
-              const fields=[
-                  "f_name",
-                  "f_phone",
-                  "f_address",
-                  "f_device",
-                  "f_install",
-                  "f_filter",
-                  "f_next",
-                  "f_f56",
-                  "f_membrane",
-                  "f_notes",
-                  "f_debt"
-              ];
-
-              fields.forEach(
-                  function(id){
-
-                      document.getElementById(
-                          id
-                      ).value="";
-
-                  }
-              );
-
-              document.getElementById(
-                  "customerModal"
-              ).style.display="block";
-          }
-
-
-          function closeModal(){
-
-              document.getElementById(
-                  "customerModal"
-              ).style.display="none";
-          }
-
-
-          function saveCustomer(){
-
-              const customer={
-
-                  name:
-                      document.getElementById(
-                          "f_name"
-                      ).value.trim(),
-
-                  phone:
-                      document.getElementById(
-                          "f_phone"
-                      ).value.trim(),
-
-                  address:
-                      document.getElementById(
-                          "f_address"
-                      ).value.trim(),
-
-                  device:
-                      document.getElementById(
-                          "f_device"
-                      ).value.trim(),
-
-                  install:
-                      document.getElementById(
-                          "f_install"
-                      ).value.trim(),
-
-                  filter:
-                      document.getElementById(
-                          "f_filter"
-                      ).value.trim(),
-
-                  next:
-                      document.getElementById(
-                          "f_next"
-                      ).value.trim(),
-
-                  f56:
-                      document.getElementById(
-                          "f_f56"
-                      ).value.trim(),
-
-                  membrane:
-                      document.getElementById(
-                          "f_membrane"
-                      ).value.trim(),
-
-                  notes:
-                      document.getElementById(
-                          "f_notes"
-                      ).value.trim(),
-
-                  debt:
-                      document.getElementById(
-                          "f_debt"
-                      ).value.trim()
-              };
-
-
-              if(
-                  !customer.name &&
-                  !customer.phone
-              ){
-
-                  alert(
-                      "حداقل نام یا شماره تماس را وارد کن."
-                  );
-
-                  return;
-              }
-
-
-              if(editIndex>=0){
-
-                  customers[editIndex]={
-                      ...customers[editIndex],
-                      ...customer
-                  };
-
-                  showMessage(
-                      "اطلاعات مشتری ویرایش شد."
-                  );
-
-              }else{
-
-                  customers.push(
-                      customer
-                  );
-
-                  showMessage(
-                      "مشتری با موفقیت اضافه شد."
-                  );
-              }
-
-
-              saveCustomers();
-
-              render();
-
-              closeModal();
-          }
-
-
-          function editCustomer(index){
-
-              const c =
-                  customers[index];
-
-              if(!c)
-                  return;
-
-              editIndex=index;
-
-              document.getElementById(
-                  "modalTitle"
-              ).textContent =
-                  "ویرایش مشتری";
-
-
-              document.getElementById(
-                  "f_name"
-              ).value =
-                  c.name || "";
-
-
-              document.getElementById(
-                  "f_phone"
-              ).value =
-                  c.phone || "";
-
-
-              document.getElementById(
-                  "f_address"
-              ).value =
-                  c.address || "";
-
-
-              document.getElementById(
-                  "f_device"
-              ).value =
-                  c.device || "";
-
-
-              document.getElementById(
-                  "f_install"
-              ).value =
-                  c.install || "";
-
-
-              document.getElementById(
-                  "f_filter"
-              ).value =
-                  c.filter || "";
-
-
-              document.getElementById(
-                  "f_next"
-              ).value =
-                  c.next || "";
-
-
-              document.getElementById(
-                  "f_f56"
-              ).value =
-                  c.f56 || "";
-
-
-              document.getElementById(
-                  "f_membrane"
-              ).value =
-                  c.membrane || "";
-
-
-              document.getElementById(
-                  "f_notes"
-              ).value =
-                  c.notes || "";
-
-
-              document.getElementById(
-                  "f_debt"
-              ).value =
-                  c.debt || "";
-
-
-              document.getElementById(
-                  "customerModal"
-              ).style.display="block";
-          }
-
-
-          function deleteCustomer(index){
-
-              if(
-                  !confirm(
-                      "این مشتری حذف شود؟"
-                  )
-              ){
-                  return;
-              }
-
-              customers.splice(
-                  index,
-                  1
-              );
-
-              saveCustomers();
-
-              render();
-
-              showMessage(
-                  "مشتری حذف شد."
-              );
-          }
-
-
-          /*
-           * =====================================================
-           * SEARCH + RENDER
-           * =====================================================
-           */
-
-          document
-              .getElementById("search")
-              .addEventListener(
-                  "input",
-                  render
-              );
-
-
-          function render(){
-
-              document.getElementById(
-                  "total"
-              ).textContent =
-                  customers.length;
-
-
-              document.getElementById(
-                  "phoneCount"
-              ).textContent =
-                  customers.filter(
-                      function(c){
-                          return Boolean(c.phone);
-                      }
-                  ).length;
-
-
-              const query =
-                  document.getElementById(
-                      "search"
-                  ).value
-                  .trim()
-                  .toLowerCase();
-
-
-              const list =
-                  document.getElementById(
-                      "list"
-                  );
-
-
-              const filtered =
-                  customers.filter(
-                      function(c){
-
-                          const text=[
-                              c.name,
-                              c.phone,
-                              c.address,
-                              c.device,
-                              c.notes
-                          ]
-                          .join(" ")
-                          .toLowerCase();
-
-                          return (
-                              !query ||
-                              text.includes(query)
-                          );
-                      }
-                  );
-
-
-              if(!filtered.length){
-
-                  list.innerHTML =
-                      `
-                      <div class="empty">
-                          هنوز مشتری‌ای پیدا نشد.
-                      </div>
-                      `;
-
-                  return;
-              }
-
-
-              list.innerHTML =
-                  filtered
-                  .map(
-                      function(c){
-
-                          const index =
-                              customers.indexOf(c);
-
-                          return `
-
-                          <div class="customer">
-
-                              <div class="customer-name">
-                                  ${escapeHtml(
-                                      c.name ||
-                                      "بدون نام"
-                                  )}
-                              </div>
-
-                              <div class="info">
-
-                                  📞
-                                  ${escapeHtml(
-                                      c.phone ||
-                                      "بدون شماره"
-                                  )}
-
-                                  <br>
-
-                                  📍
-                                  ${escapeHtml(
-                                      c.address ||
-                                      "بدون آدرس"
-                                  )}
-
-                                  <br>
-
-                                  💧
-                                  ${escapeHtml(
-                                      c.device ||
-                                      "نوع دستگاه ثبت نشده"
-                                  )}
-
-                                  ${
-                                      c.next
-                                      ?
-                                      `<br>🗓 سرویس بعدی:
-                                      ${escapeHtml(c.next)}`
-                                      :
-                                      ""
-                                  }
-
-                              </div>
-
-
-                              <div class="actions">
-
-                                  ${
-                                      c.phone
-                                      ?
-                                      `
-                                      <button
-                                          class="secondary"
-                                          onclick="callCustomer('${escapeAttr(c.phone)}')">
-
-                                          📞 تماس
-
-                                      </button>
-                                      `
-                                      :
-                                      ""
-                                  }
-
-
-                                  <button
-                                      class="secondary"
-                                      onclick="editCustomer(${index})">
-
-                                      ✏️ ویرایش
-
-                                  </button>
-
-
-                                  <button
-                                      class="danger"
-                                      onclick="deleteCustomer(${index})">
-
-                                      حذف
-
-                                  </button>
-
-                              </div>
-
-                          </div>
-
-                          `;
-                      }
-                  )
-                  .join("");
-          }
-
-
-          function escapeHtml(value){
-
-              return String(value || "")
-                  .replace(/&/g,"&amp;")
-                  .replace(/</g,"&lt;")
-                  .replace(/>/g,"&gt;")
-                  .replace(/"/g,"&quot;")
-                  .replace(/'/g,"&#039;");
-          }
-
-
-          function escapeAttr(value){
-
-              return String(value || "")
-                  .replace(/\\/g,"\\\\")
-                  .replace(/'/g,"\\'");
-          }
-
-
-          function callCustomer(phone){
-
-              window.location.href =
-                  "tel:" + phone;
-          }
-
-
-          /*
-           * =====================================================
-           * EXCEL FILE PICKER
-           * =====================================================
-           */
-
-          function openExcelPicker(){
-
-              const input =
-                  document.getElementById(
-                      "excelInput"
-                  );
-
-              /*
-               * Reset value first.
-               * This allows selecting the same file again.
-               */
-
-              input.value="";
-
-              input.click();
-          }
-
-
-          document
-              .getElementById("excelInput")
-              .addEventListener(
-                  "change",
-                  function(event){
-
-                      if(
-                          event.target.files &&
-                          event.target.files.length
-                      ){
-
-                          importExcelFile(
-                              event.target.files[0]
-                          );
-                      }
-
-                  }
-              );
-
-
-          /*
-           * =====================================================
-           * PERSIAN NORMALIZATION
-           * =====================================================
-           */
-
-          function normalizeText(value){
-
-              return String(value ?? "")
-                  .trim()
-                  .replace(/\u200c/g,"")
-                  .replace(/[يى]/g,"ی")
-                  .replace(/ك/g,"ک")
-                  .replace(/[۰-۹]/g,
-                      function(d){
-                          return
-                              "۰۱۲۳۴۵۶۷۸۹"
-                              .indexOf(d);
-                      }
-                  )
-                  .replace(/\s+/g,"")
-                  .toLowerCase();
-          }
-
-
-          /*
-           * =====================================================
-           * CELL VALUE
-           * =====================================================
-           */
-
-          function cellValue(value){
-
-              if(
-                  value === undefined ||
-                  value === null
-              ){
-                  return "";
-              }
-
-              let result =
-                  String(value).trim();
-
-              /*
-               * Excel sometimes returns phone
-               * numbers such as 9301234567.0
-               */
-
-              if(
-                  /^\d{9,12}\.0$/.test(result)
-              ){
-
-                  result =
-                      result.substring(
-                          0,
-                          result.length-2
-                      );
-              }
-
-
-              /*
-               * If phone has 9xxxxxxxxx
-               * add the leading zero.
-               */
-
-              if(
-                  /^9\d{9}$/.test(result)
-              ){
-
-                  result =
-                      "0" + result;
-              }
-
-
-              return result;
-          }
-
-
-          /*
-           * =====================================================
-           * COLUMN ALIASES
-           * =====================================================
-           */
-
-          const ALIASES={
-
-              name:[
-                  "نام و نام خانوادگی",
-                  "نام مشتری",
-                  "نام",
-                  "مشتری"
-              ],
-
-              phone:[
-                  "شماره تماس",
-                  "شماره تلفن",
-                  "تلفن",
-                  "موبایل",
-                  "شماره"
-              ],
-
-              address:[
-                  "آدرس",
-                  "نشانی"
-              ],
-
-              device:[
-                  "نوع دستگاه",
-                  "مدل دستگاه",
-                  "دستگاه",
-                  "مدل"
-              ],
-
-              install:[
-                  "تاریخ نصب"
-              ],
-
-              filter:[
-                  "تعویض فیلتر",
-                  "آخرین تعویض فیلتر"
-              ],
-
-              f56:[
-                  "فیلتر 5و6",
-                  "فیلتر ۵و۶",
-                  "فیلتر ۵ و ۶",
-                  "فیلتر5و6"
-              ],
-
-              next:[
-                  "تاریخ بعدی",
-                  "موعد سرویس بعدی",
-                  "سرویس بعدی"
-              ],
-
-              membrane:[
-                  "ممبران"
-              ],
-
-              notes:[
-                  "ملاحظات",
-                  "ملاحضات",
-                  "توضیحات",
-                  "یادداشت"
-              ],
-
-              debt:[
-                  "بدهکاری",
-                  "بدهی"
-              ]
-          };
-
-
-          function findColumn(
-              headers,
-              aliases
-          ){
-
-              const wanted =
-                  aliases.map(
-                      normalizeText
-                  );
-
-
-              for(
-                  let i=0;
-                  i<headers.length;
-                  i++
-              ){
-
-                  const header =
-                      normalizeText(
-                          headers[i]
-                      );
-
-
-                  if(
-                      wanted.includes(header)
-                  ){
-                      return i;
-                  }
-              }
-
-
-              return -1;
-          }
-
-
-          /*
-           * =====================================================
-           * FIND HEADER ROW
-           * =====================================================
-           *
-           * We don't assume the header is row 1.
-           * First 20 rows are checked.
-           */
-
-          function findHeaderRow(rows){
-
-              let bestIndex=-1;
-              let bestScore=0;
-
-
-              const max =
-                  Math.min(
-                      rows.length,
-                      20
-                  );
-
-
-              for(
-                  let r=0;
-                  r<max;
-                  r++
-              ){
-
-                  const row =
-                      rows[r] || [];
-
-
-                  let score=0;
-
-
-                  const normalized =
-                      row.map(
-                          normalizeText
-                      );
-
-
-                  Object.keys(ALIASES)
-                      .forEach(
-                          function(key){
-
-                              const aliases =
-                                  ALIASES[key]
-                                  .map(
-                                      normalizeText
-                                  );
-
-
-                              if(
-                                  normalized.some(
-                                      function(h){
-                                          return aliases.includes(h);
-                                      }
-                                  )
-                              ){
-                                  score++;
-                              }
-
-                          }
-                      );
-
-
-                  if(score>bestScore){
-
-                      bestScore=score;
-
-                      bestIndex=r;
-                  }
-              }
-
-
-              /*
-               * At least two recognizable
-               * customer columns required.
-               */
-
-              if(bestScore>=2){
-                  return bestIndex;
-              }
-
-
-              return -1;
-          }
-
-
-          /*
-           * =====================================================
-           * CONVERT EXCEL ROW
-           * =====================================================
-           */
-
-          function convertExcelRow(
-              row,
-              headers
-          ){
-
-              function get(key){
-
-                  const col =
-                      findColumn(
-                          headers,
-                          ALIASES[key]
-                      );
-
-                  if(col<0)
-                      return "";
-
-                  return cellValue(
-                      row[col]
-                  );
-              }
-
-
-              return {
-
-                  name:get("name"),
-
-                  phone:get("phone"),
-
-                  address:get("address"),
-
-                  device:get("device"),
-
-                  install:get("install"),
-
-                  filter:get("filter"),
-
-                  f56:get("f56"),
-
-                  next:get("next"),
-
-                  membrane:get("membrane"),
-
-                  notes:get("notes"),
-
-                  debt:get("debt"),
-
-                  imported:true
-              };
-          }
-
-
-          function isCustomerRow(customer){
-
-              return Boolean(
-                  customer.name ||
-                  customer.phone ||
-                  customer.address ||
-                  customer.device
-              );
-          }
-
-
-          /*
-           * =====================================================
-           * SCORE SHEET
-           * =====================================================
-           */
-
-          function scoreSheet(
-              sheetName,
-              rows
-          ){
-
-              if(
-                  !rows ||
-                  !rows.length
-              ){
-                  return {
-                      score:0,
-                      headerIndex:-1
-                  };
-              }
-
-
-              const headerIndex =
-                  findHeaderRow(rows);
-
-
-              if(headerIndex<0){
-
-                  return {
-                      score:0,
-                      headerIndex:-1
-                  };
-              }
-
-
-              const headers =
-                  rows[headerIndex] || [];
-
-
-              let score=0;
-
-
-              const normalizedName =
-                  normalizeText(
-                      sheetName
-                  );
-
-
-              /*
-               * Prefer the actual customer sheets
-               * from the user's workbook.
-               */
-
-              if(
-                  normalizedName ===
-                  normalizeText("مشتري")
-              ){
-                  score+=100;
-              }
-
-
-              if(
-                  normalizedName ===
-                  normalizeText("هاکان نوین")
-              ){
-                  score+=90;
-              }
-
-
-              /*
-               * Count recognized columns.
-               */
-
-              Object.keys(ALIASES)
-                  .forEach(
-                      function(key){
-
-                          if(
-                              findColumn(
-                                  headers,
-                                  ALIASES[key]
-                              )>=0
-                          ){
-                              score+=5;
-                          }
-
-                      }
-                  );
-
-
-              /*
-               * More populated rows = slightly
-               * stronger candidate.
-               */
-
-              let populated=0;
-
-
-              for(
-                  let i=headerIndex+1;
-                  i<rows.length;
-                  i++
-              ){
-
-                  const row =
-                      rows[i] || [];
-
-
-                  if(
-                      row.some(
-                          function(x){
-                              return String(
-                                  x ?? ""
-                              ).trim() !== "";
-                          }
-                      )
-                  ){
-                      populated++;
-                  }
-
-              }
-
-
-              score +=
-                  Math.min(
-                      populated,
-                      20
-                  );
-
-
-              return {
-                  score:score,
-                  headerIndex:headerIndex
-              };
-          }
-
-
-          /*
-           * =====================================================
-           * IMPORT EXCEL
-           * =====================================================
-           */
-
-          function importExcelFile(file){
-
-              if(!file){
-
-                  alert(
-                      "فایلی انتخاب نشده است."
-                  );
-
-                  return;
-              }
-
-
-              showMessage(
-                  "⏳ در حال خواندن فایل Excel..."
-              );
-
-
-              const reader =
-                  new FileReader();
-
-
-              reader.onload =
-                  function(event){
-
-                      try{
-
-                          const data =
-                              new Uint8Array(
-                                  event.target.result
-                              );
-
-
-                          const workbook =
-                              XLSX.read(
-                                  data,
-                                  {
-                                      type:"array",
-                                      cellDates:false,
-                                      raw:false
-                                  }
-                              );
-
-
-                          if(
-                              !workbook.SheetNames ||
-                              !workbook.SheetNames.length
-                          ){
-
-                              alert(
-                                  "هیچ شیتی در فایل پیدا نشد."
-                              );
-
-                              return;
-                          }
-
-
-                          /*
-                           * Find the best customer sheet.
-                           */
-
-                          let bestSheet=null;
-
-
-                          workbook.SheetNames
-                              .forEach(
-                                  function(sheetName){
-
-                                      const worksheet =
-                                          workbook.Sheets[
-                                              sheetName
-                                          ];
-
-
-                                      if(!worksheet)
-                                          return;
-
-
-                                      const rows =
-                                          XLSX.utils.sheet_to_json(
-                                              worksheet,
-                                              {
-                                                  header:1,
-                                                  defval:"",
-                                                  raw:false
-                                              }
-                                          );
-
-
-                                      const result =
-                                          scoreSheet(
-                                              sheetName,
-                                              rows
-                                          );
-
-
-                                      if(
-                                          result.score>0 &&
-                                          (
-                                              bestSheet===null ||
-                                              result.score >
-                                              bestSheet.score
-                                          )
-                                      ){
-
-                                          bestSheet={
-
-                                              name:
-                                                  sheetName,
-
-                                              rows:
-                                                  rows,
-
-                                              score:
-                                                  result.score,
-
-                                              headerIndex:
-                                                  result.headerIndex
-
-                                          };
-                                      }
-
-                                  }
-                              );
-
-
-                          if(!bestSheet){
-
-                              alert(
-                                  "❌ هیچ شیت مشتری در فایل پیدا نشد.\n\n"+
-                                  "باید حداقل ستون‌هایی مثل «نام»، «شماره تماس» یا «آدرس» وجود داشته باشد."
-                              );
-
-                              return;
-                          }
-
-
-                          const headers =
-                              bestSheet.rows[
-                                  bestSheet.headerIndex
-                              ];
-
-
-                          const imported=[];
-
-
-                          for(
-                              let i=
-                                  bestSheet.headerIndex+1;
-                              i<
-                                  bestSheet.rows.length;
-                              i++
-                          ){
-
-                              const row =
-                                  bestSheet.rows[i];
-
-
-                              if(!row)
-                                  continue;
-
-
-                              const customer =
-                                  convertExcelRow(
-                                      row,
-                                      headers
-                                  );
-
-
-                              /*
-                               * Ignore completely blank rows.
-                               */
-
-                              if(
-                                  isCustomerRow(
-                                      customer
-                                  )
-                              ){
-
-                                  imported.push(
-                                      customer
-                                  );
-                              }
-
-                          }
-
-
-                          if(!imported.length){
-
-                              alert(
-                                  "شیت «"+
-                                  bestSheet.name+
-                                  "» پیدا شد، اما ردیف مشتری قابل خواندن نبود."
-                              );
-
-                              return;
-                          }
-
-
-                          /*
-                           * IMPORTANT:
-                           *
-                           * Existing customers are not deleted.
-                           * Source duplicates are preserved.
-                           */
-
-                          const previousCount =
-                              customers.length;
-
-
-                          customers =
-                              customers.concat(
-                                  imported
-                              );
-
-
-                          saveCustomers();
-
-                          render();
-
-
-                          alert(
-
-                              "✅ ورود Excel موفق بود\n\n"+
-
-                              "📄 شیت انتخاب‌شده: "+
-                              bestSheet.name+
-                              "\n\n"+
-
-                              "👤 مشتری واردشده: "+
-                              imported.length+
-                              "\n\n"+
-
-                              "📊 تعداد کل مشتریان: "+
-                              customers.length
-
-                          );
-
-
-                          showMessage(
-                              "✅ "+
-
-                              imported.length+
-
-                              " مشتری از Excel وارد شد."
-                          );
-
-
-                      }catch(error){
-
-                          console.error(
-                              "Excel import error:",
-                              error
-                          );
-
-
-                          alert(
-                              "❌ خطا در خواندن Excel\n\n"+
-                              error.message
-                          );
-                      }
-
-                  };
-
-
-              reader.onerror =
-                  function(){
-
-                      alert(
-                          "❌ برنامه نتوانست فایل را بخواند."
-                      );
-
-                  };
-
-
-              reader.readAsArrayBuffer(
-                  file
-              );
-          }
-
-
-          /*
-           * =====================================================
-           * EXPORT EXCEL
-           * =====================================================
-           */
-
-          function exportExcel(){
-
-              if(!customers.length){
-
-                  alert(
-                      "هیچ مشتری‌ای برای خروجی وجود ندارد."
-                  );
-
-                  return;
-              }
-
-
-              const rows =
-                  customers.map(
-                      function(c,index){
-
-                          return {
-
-                              "ردیف":
-                                  index+1,
-
-                              "نام و نام خانوادگی":
-                                  c.name || "",
-
-                              "شماره تماس":
-                                  c.phone || "",
-
-                              "آدرس":
-                                  c.address || "",
-
-                              "نوع دستگاه":
-                                  c.device || "",
-
-                              "تاریخ نصب":
-                                  c.install || "",
-
-                              "آخرین تعویض فیلتر":
-                                  c.filter || "",
-
-                              "فیلتر 5و6":
-                                  c.f56 || "",
-
-                              "تاریخ بعدی":
-                                  c.next || "",
-
-                              "ممبران":
-                                  c.membrane || "",
-
-                              "ملاحظات":
-                                  c.notes || "",
-
-                              "بدهکاری":
-                                  c.debt || ""
-                          };
-                      }
-                  );
-
-
-              const worksheet =
-                  XLSX.utils.json_to_sheet(
-                      rows
-                  );
-
-
-              const workbook =
-                  XLSX.utils.book_new();
-
-
-              XLSX.utils.book_append_sheet(
-                  workbook,
-                  worksheet,
-                  "مشتریان"
-              );
-
-
-              XLSX.writeFile(
-                  workbook,
-                  "HakanNovin-Customers.xlsx"
-              );
-
-
-              showMessage(
-                  "📤 فایل Excel ساخته شد."
-              );
-          }
-
-
-          /*
-           * =====================================================
-           * CLEAR ALL
-           * =====================================================
-           */
-
-          function clearCustomers(){
-
-              if(!customers.length){
-
-                  alert(
-                      "لیست مشتریان خالی است."
-                  );
-
-                  return;
-              }
-
-
-              if(
-                  !confirm(
-                      "⚠️ همه مشتریان حذف شوند؟\n\nاین کار قابل برگشت نیست."
-                  )
-              ){
-                  return;
-              }
-
-
-              customers=[];
-
-              saveCustomers();
-
-              render();
-
-              showMessage(
-                  "همه مشتریان حذف شدند."
-              );
-          }
-
-
-          /*
-           * =====================================================
-           * START
-           * =====================================================
-           */
-
-          loadCustomers();
-
-          </script>
-
-          </body>
-
-          </html>
-          EOF
-
-      # ---------------------------------------------------------
-      # Gradle
-      # ---------------------------------------------------------
-      - name: Install Gradle
-        shell: bash
-        run: |
-
-          curl -L --fail \
-            https://services.gradle.org/distributions/gradle-8.7-bin.zip \
-            -o gradle.zip
-
-          unzip -q gradle.zip
-
-          ./gradle-8.7/bin/gradle --version
-
-      # ---------------------------------------------------------
-      # Build
-      # ---------------------------------------------------------
-      - name: Build APK
-        shell: bash
-        run: |
-
-          ./gradle-8.7/bin/gradle \
-            assembleDebug \
-            --no-daemon \
-            --stacktrace
-
-      # ---------------------------------------------------------
-      # Check
-      # ---------------------------------------------------------
-      - name: Check APK
-        shell: bash
-        run: |
-
-          echo "APK files:"
-
-          find app/build/outputs/apk/debug \
-            -type f \
-            -maxdepth 1 \
-            -print
-
-          test -f \
-            app/build/outputs/apk/debug/app-debug.apk
-
-          ls -lh \
-            app/build/outputs/apk/debug/app-debug.apk
-
-      # ---------------------------------------------------------
-      # Upload APK
-      # ---------------------------------------------------------
       - name: Upload APK
         uses: actions/upload-artifact@v4
-
         with:
-
-          name: HakanNovin-APK-v3.2
-
-          path:
-            app/build/outputs/apk/debug/app-debug.apk
-
+          name: HakanNovin-APK
+          path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error
