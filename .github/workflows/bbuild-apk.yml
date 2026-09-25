@@ -1,0 +1,102 @@
+name: Hakan Novin v6.0 - Build APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Installable APK
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # 1) دریافت پروژه
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      # 2) نصب Java 17
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # 3) نصب Android SDK
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      # 4) نصب SDK مورد نیاز
+      - name: Install Android SDK packages
+        run: |
+          yes | sdkmanager --licenses || true
+          sdkmanager "platform-tools"
+          sdkmanager "platforms;android-35"
+          sdkmanager "build-tools;35.0.0"
+
+      # 5) نصب Gradle 8.9
+      - name: Setup Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      # 6) بررسی ساختار پروژه
+      - name: Check project structure
+        run: |
+          echo "===== PROJECT ROOT ====="
+          ls -la
+
+          echo "===== APP ====="
+          ls -la app || true
+
+          echo "===== GRADLE FILES ====="
+          find . -maxdepth 3 -type f \
+            \( -name "build.gradle" \
+            -o -name "settings.gradle" \
+            -o -name "gradlew" \
+            -o -name "gradle-wrapper.properties" \) \
+            -print
+
+      # 7) ساخت APK
+      - name: Clean project
+        run: |
+          gradle --no-daemon clean
+
+      - name: Build Debug APK
+        run: |
+          gradle --no-daemon assembleDebug
+
+      # 8) بررسی APK
+      - name: Verify APK
+        run: |
+          echo "===== APK FILES ====="
+          find app/build/outputs -type f -print
+
+          test -f app/build/outputs/apk/debug/app-debug.apk
+
+          echo "===== APK INFO ====="
+          ls -lh app/build/outputs/apk/debug/app-debug.apk
+
+          file app/build/outputs/apk/debug/app-debug.apk
+
+      # 9) تغییر نام APK
+      - name: Rename APK
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk \
+             app/build/outputs/apk/debug/HakanNovin-v6.0.apk
+
+          ls -lh app/build/outputs/apk/debug/
+
+      # 10) قرار دادن APK برای دانلود
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: HakanNovin-v6.0-APK
+          path: app/build/outputs/apk/debug/HakanNovin-v6.0.apk
+          if-no-files-found: error
+          retention-days: 30
